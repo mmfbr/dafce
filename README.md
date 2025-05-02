@@ -1,4 +1,6 @@
-# DAF – Delphi Application Foundations (Community Edition)
+![DAF logo](assets/DAF-Logo.png)
+
+# DAF – Delphi Application Foundations (Community Edition) 
 
 **Bringing modern development practices to Delphi — welcoming .NET developers to a familiar architecture**
 
