@@ -1,0 +1,45 @@
+package Daf.Commons;
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE ON}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  dbrtl;
+
+contains
+  Daf.MemUtils in 'Daf.MemUtils.pas',
+  Daf.Types in 'Daf.Types.pas',
+  Daf.Activator in 'Daf.Activator.pas',
+  Daf.Expression in 'Daf.Expression.pas',
+  Daf.Rtti in 'Daf.Rtti.pas',
+  Daf.CmdLn.Parser in 'Daf.CmdLn.Parser.pas',
+  Daf.Arrays in 'Daf.Arrays.pas',
+  Daf.Enumerable in 'Daf.Enumerable.pas',
+  Daf.Threading in 'Daf.Threading.pas';
+
+end.

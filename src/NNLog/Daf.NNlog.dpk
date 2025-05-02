@@ -1,0 +1,50 @@
+﻿package Daf.NNlog;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  IndyCore,
+  IndySystem,
+  Daf.Logging.Abstractions,
+  Daf.Logging,
+  Daf.Hosting.Abstractions,
+  Daf.Configuration;
+
+contains
+  DAF.NNLog.Targets.Console in 'Targets\DAF.NNLog.Targets.Console.pas',
+  DAF.NNLog.Configuration in 'DAF.NNLog.Configuration.pas',
+  DAF.NNLog.Targets.Debug in 'Targets\DAF.NNLog.Targets.Debug.pas',
+  DAF.NNLog.Layout in 'DAF.NNLog.Layout.pas',
+  DAF.NNLog.Loader in 'DAF.NNLog.Loader.pas',
+  Daf.NNLog in 'Daf.NNLog.pas',
+  DAF.NNLog.Targets.UDP in 'Targets\DAF.NNLog.Targets.UDP.pas',
+  DAF.NNLog.Targets.File_ in 'Targets\DAF.NNLog.Targets.File_.pas';
+
+end.

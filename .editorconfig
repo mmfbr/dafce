@@ -1,0 +1,44 @@
+# Editor configuration, see http://editorconfig.org
+root = true
+
+[*.{pas,dpr,dpk}]
+charset = utf-8
+end_of_line = crlf
+indent_style = space
+indent_size = 2
+max_line_length = 132
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+charset = utf-8
+end_of_line = crlf
+max_line_length = off
+trim_trailing_whitespace = false
+
+[*.js]
+charset = utf-8
+end_of_line = crlf
+indent_style = space
+max_line_length = 132
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.json]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+max_line_length = 132
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.ini]
+charset = utf-8
+end_of_line = crlf
+indent_style = space
+max_line_length = 132
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
