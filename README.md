@@ -1,4 +1,4 @@
-![DAF logo](assets/DAF-Logo.png)
+![](assets/DAF-Logo.png)
 
 # DAF – Delphi Application Foundations (Community Edition) 
 
