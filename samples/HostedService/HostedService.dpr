@@ -21,7 +21,7 @@ uses
 begin
   ReportMemoryLeaksOnShutdown := True;
   try
-    var Builder := TDafApplication.CreateBuilder;
+    var Builder := TDafApplication.CreateHostBuilder;
     Builder.ConfigureAppConfiguration(
       procedure(Context: IHostBuilderContext; Builder: IConfigurationBuilder)
       begin
