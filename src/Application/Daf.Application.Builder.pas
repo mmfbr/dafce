@@ -64,12 +64,12 @@ type
     function GetHost: IHost;
     function GetConfiguration: IConfiguration;
   protected
-    class function CreateBuilder(BuilderClass: TDafApplicationBuilderClass): TDafApplicationBuilder;overload;
+    class function CreateHostBuilder(BuilderClass: TDafApplicationBuilderClass): TDafApplicationBuilder;overload;
     function VersionRequested: Boolean;virtual;
     procedure Execute;virtual;
   public
-    class function CreateBuilder: TDafApplicationBuilder;overload;
-    class function CreateBuilder<T: TDafApplicationBuilder>: T;overload;
+    class function CreateHostBuilder: TDafApplicationBuilder;overload;
+    class function CreateHostBuilder<T: TDafApplicationBuilder>: T;overload;
     class function App: TDafApplication;inline;
     constructor Create(const Host: IHost);virtual;
     procedure Start;
@@ -121,19 +121,19 @@ end;
 
 { TDafApplication }
 
-class function TDafApplication.CreateBuilder(BuilderClass: TDafApplicationBuilderClass): TDafApplicationBuilder;
+class function TDafApplication.CreateHostBuilder(BuilderClass: TDafApplicationBuilderClass): TDafApplicationBuilder;
 begin
   Result := BuilderClass.Create(Self);
 end;
 
-class function TDafApplication.CreateBuilder: TDafApplicationBuilder;
+class function TDafApplication.CreateHostBuilder: TDafApplicationBuilder;
 begin
-  Result := CreateBuilder(TDafApplicationBuilder);
+  Result := CreateHostBuilder(TDafApplicationBuilder);
 end;
 
-class function TDafApplication.CreateBuilder<T>: T;
+class function TDafApplication.CreateHostBuilder<T>: T;
 begin
-  Result := CreateBuilder(T) as T;
+  Result := CreateHostBuilder(T) as T;
 end;
 
 constructor TDafApplication.Create(const Host: IHost);
