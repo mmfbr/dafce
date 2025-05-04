@@ -41,6 +41,7 @@ type
     ['{A503E6E7-CA5D-4BE2-8900-10F3BC73B138}']
     function IsCancellationRequested: Boolean;
     function WaitFor(Timeout: Cardinal): TWaitResult;
+    procedure Register(const Callback: TProc);
   end;
 
   ICancellationTokenSource = interface
@@ -117,11 +118,13 @@ type
     constructor Create(const Source: ICancellationTokenSource);
     function IsCancellationRequested: Boolean;
     function WaitFor(Timeout: Cardinal): TWaitResult;
+    procedure Register(const Callback: TProc);
   end;
 
   TCancellationTokenSource = class(TInterfacedObject, ICancellationTokenSource)
   private
     FEvent: TEvent;
+    FCallbacks: TList<TProc>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -129,25 +132,26 @@ type
     function IsCancellationRequested: Boolean;
     function WaitFor(Timeout: Cardinal): TWaitResult;
     procedure Cancel;
+    procedure Register(const Callback: TProc);
   end;
 
-TTimeoutCancellationSource = class(TCancellationTokenSource)
-private
-  FTimer: TThreadTimer;
-  procedure OnTimer;
-public
-  constructor Create(Timeout: Cardinal);
-  destructor Destroy; override;
-end;
+  TTimeoutCancellationSource = class(TCancellationTokenSource)
+  private
+    FTimer: TThreadTimer;
+    procedure OnTimer;
+  public
+    constructor Create(Timeout: Cardinal);
+    destructor Destroy; override;
+  end;
 
-TLinkedCancellationSource = class(TCancellationTokenSource)
-private
-  FRegistrations: TObjectList<TThread>;
-  procedure MonitorToken(const Token: ICancellationToken);
-public
-  constructor Create(const Tokens: array of ICancellationToken);
-  destructor Destroy; override;
-end;
+  TLinkedCancellationSource = class(TCancellationTokenSource)
+  private
+    FRegistrations: TObjectList<TThread>;
+    procedure MonitorToken(const Token: ICancellationToken);
+  public
+    constructor Create(const Tokens: array of ICancellationToken);
+    destructor Destroy; override;
+  end;
 
 { Factory Functions }
 
@@ -278,6 +282,11 @@ begin
   Result := FSource.IsCancellationRequested
 end;
 
+procedure TCancellationToken.Register(const Callback: TProc);
+begin
+  (FSource as TCancellationTokenSource).Register(Callback)
+end;
+
 function TCancellationToken.WaitFor(Timeout: Cardinal): TWaitResult;
 begin
   Result := FSource.WaitFor(Timeout);
@@ -289,10 +298,12 @@ constructor TCancellationTokenSource.Create;
 begin
   inherited Create;
   FEvent := TEvent.Create(nil, True, False, '');
+  FCallbacks := TList<TProc>.Create;
 end;
 
 destructor TCancellationTokenSource.Destroy;
 begin
+  FCallbacks.Free;
   FEvent.Free;
   inherited;
 end;
@@ -305,11 +316,34 @@ end;
 procedure TCancellationTokenSource.Cancel;
 begin
   FEvent.SetEvent;
+  TMonitor.Enter(FCallbacks);
+  try
+    for var Callback in FCallbacks do
+      Callback();
+    FCallbacks.Clear;
+  finally
+    TMonitor.Exit(FCallbacks);
+  end;
 end;
 
 function TCancellationTokenSource.IsCancellationRequested: Boolean;
 begin
   Result := FEvent.WaitFor(0) = wrSignaled;
+end;
+
+procedure TCancellationTokenSource.Register(const Callback: TProc);
+begin
+ if IsCancellationRequested then
+    Callback()
+  else
+  begin
+    TMonitor.Enter(FCallbacks);
+    try
+      FCallbacks.Add(Callback);
+    finally
+      TMonitor.Exit(FCallbacks);
+    end;
+  end;
 end;
 
 function TCancellationTokenSource.WaitFor(Timeout: Cardinal): TWaitResult;

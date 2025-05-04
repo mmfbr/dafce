@@ -8,6 +8,7 @@ uses
   System.Classes,
   System.Generics.Collections,
   System.Rtti,
+  Daf.Threading,
   DAF.Extensions.DependencyInjection,
   Daf.Extensions.Configuration;
 
@@ -76,12 +77,10 @@ type
 
   IHostApplicationLifetime = interface(IInvokable)
     ['{30A46EB0-7D18-414C-B723-4F9B32043D81}']
-    procedure RegisterOnStarted(const Callback: TProc);
-    procedure RegisterOnStopping(const Callback: TProc);
-    procedure RegisterOnStopped(const Callback: TProc);
-    procedure NotifyStarted;
-    procedure NotifyStopping;
-    procedure NotifyStopped;
+    function ApplicationStarted: ICancellationToken;
+    function ApplicationStopping: ICancellationToken;
+    function ApplicationStopped: ICancellationToken;
+    procedure StopApplication;
   end;
 
   TEnvironments = record

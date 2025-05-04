@@ -6,6 +6,7 @@ uses
   System.Generics.Collections,
   System.Rtti,
   System.SysUtils,
+  Daf.Threading,
   Daf.Extensions.Hosting,
   Daf.Extensions.Configuration,
   Daf.Extensions.DependencyInjection;
@@ -123,16 +124,18 @@ type
 
   THostApplicationLifetime = class(TInterfacedObject, IHostApplicationLifetime)
   private
-    FOnStarted: TList<TProc>;
-    FOnStopping: TList<TProc>;
-    FOnStopped: TList<TProc>;
+  private
+    FStartedCTS: ICancellationTokenSource;
+    FStoppingCTS: ICancellationTokenSource;
+    FStoppedCTS: ICancellationTokenSource;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure RegisterOnStarted(const Callback: TProc);
-    procedure RegisterOnStopping(const Callback: TProc);
-    procedure RegisterOnStopped(const Callback: TProc);
+    function ApplicationStarted: ICancellationToken;
+    function ApplicationStopping: ICancellationToken;
+    function ApplicationStopped: ICancellationToken;
+    procedure StopApplication;
 
     procedure NotifyStarted;
     procedure NotifyStopping;
@@ -144,7 +147,6 @@ uses
   System.IOUtils,
   System.SyncObjs,
   System.Types,
-  Daf.Threading,
   Daf.DependencyInjection,
   Daf.Configuration.Builder,
   Daf.Configuration.Chained,
@@ -288,7 +290,7 @@ begin
     HostedService.Start;
   var Lifetime := GetServices.GetRequiredService<IHostApplicationLifetime>;
   if Assigned(Lifetime) then
-    Lifetime.NotifyStarted;
+    (Lifetime as THostApplicationLifetime).NotifyStarted;
 end;
 
 procedure THost.Stop;
@@ -301,14 +303,14 @@ begin
     var Lifetime := GetServices.GetService<IHostApplicationLifetime>;
 
     if Assigned(Lifetime) then
-      Lifetime.NotifyStopping;
+      (Lifetime as THostApplicationLifetime).NotifyStopping;
 
     for var HostedService in FHostedServices do
       HostedService.Stop;
     FHostedServices.Clear;
 
     if Assigned(Lifetime) then
-      Lifetime.NotifyStopped;
+      (Lifetime as THostApplicationLifetime).NotifyStopped;
       FContainerAccess.Shutdown;
   finally
     TMonitor.Exit(Self);
@@ -549,53 +551,48 @@ end;
 constructor THostApplicationLifetime.Create;
 begin
   inherited;
-  FOnStarted := TList<TProc>.Create;
-  FOnStopping := TList<TProc>.Create;
-  FOnStopped := TList<TProc>.Create;
-end;
+  FStartedCTS := CreateCancellationTokenSource;
+  FStoppingCTS := CreateCancellationTokenSource;
+  FStoppedCTS := CreateCancellationTokenSource;end;
 
 destructor THostApplicationLifetime.Destroy;
 begin
-  FOnStarted.Free;
-  FOnStopping.Free;
-  FOnStopped.Free;
   inherited;
 end;
 
-procedure THostApplicationLifetime.RegisterOnStarted(const Callback: TProc);
+function THostApplicationLifetime.ApplicationStarted: ICancellationToken;
 begin
-  FOnStarted.Add(Callback);
+  Result := FStartedCTS.Token;
 end;
 
-procedure THostApplicationLifetime.RegisterOnStopping(const Callback: TProc);
+function THostApplicationLifetime.ApplicationStopping: ICancellationToken;
 begin
-  FOnStopping.Add(Callback);
+  Result := FStoppingCTS.Token;
 end;
 
-procedure THostApplicationLifetime.RegisterOnStopped(const Callback: TProc);
+function THostApplicationLifetime.ApplicationStopped: ICancellationToken;
 begin
-  FOnStopped.Add(Callback);
+  Result := FStoppedCTS.Token;
+end;
+
+procedure THostApplicationLifetime.StopApplication;
+begin
+  FStoppingCTS.Cancel;
 end;
 
 procedure THostApplicationLifetime.NotifyStarted;
-var Callback: TProc;
 begin
-  for Callback in FOnStarted do
-    Callback();
+  FStartedCTS.Cancel;
 end;
 
 procedure THostApplicationLifetime.NotifyStopping;
-var Callback: TProc;
 begin
-  for Callback in FOnStopping do
-    Callback();
+  FStoppingCTS.Cancel;
 end;
 
 procedure THostApplicationLifetime.NotifyStopped;
-var Callback: TProc;
 begin
-  for Callback in FOnStopped do
-    Callback();
+  FStoppedCTS.Cancel;
 end;
 
 end.
