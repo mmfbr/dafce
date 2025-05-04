@@ -7,6 +7,7 @@ uses
   System.Classes,
   System.RegularExpressions,
   System.Generics.Collections,
+  Daf.Extensions.Hosting,
   Daf.Extensions.Logging;
 
 type
@@ -14,6 +15,7 @@ type
   TLogLayoutEngine = class
   private
   public
+    class procedure RegisterLayoutRenderers(const Environment: IHostEnvironment);
     class function ResolveToken(const Token: string; const Entry: TLogEntry): string;
     class procedure RegisterRenderer(const Name: string; const Renderer: TLayoutRenderer);
     class function ResolveLayout(const Layout: string; const Entry: TLogEntry): string;
@@ -26,7 +28,8 @@ uses
   System.Generics.Defaults,
   System.Rtti,
   System.StrUtils,
-  System.Character;
+  System.Character,
+  Daf.Types;
 
 var
   RendererMap: TDictionary<string, TLayoutRenderer> = nil;
@@ -76,12 +79,128 @@ begin
   end;
 end;
 
+class procedure TLogLayoutEngine.RegisterLayoutRenderers(const Environment: IHostEnvironment);
+begin
+  TLogLayoutEngine.RegisterRenderer('environment',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := Environment.EnvironmentName;
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('contentRootPath',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := Environment.ContentRootPath;
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('ApplicationName',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := Environment.ApplicationName;
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('binPath',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := Environment.BinPath;
+    end);
+  TLogLayoutEngine.RegisterRenderer('exception',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      if not Assigned(Entry.Exception) then
+        Exit('');
+
+      if Arg.ToLower = 'stacktrace' then
+        Result := Entry.Exception.StackTrace
+      else
+        Result := Entry.Exception.ClassName + ': ' + Entry.Exception.Message;
+    end);
+  TLogLayoutEngine.RegisterRenderer('level',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := Entry.Level.ToString;
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('category',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := Entry.Category;
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('message',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := Entry.Message;
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('env',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := GetEnvironmentVariable(Arg);
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('event-properties',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      var Value: TValue;
+      if Entry.State.TryGetValue(Arg, Value) then
+        Result := Value.ToString()
+      else
+        Result := '';
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('date',
+    function(const Arg: string; const Entry: TLogEntry): string
+    var
+      FormatStr: string;
+    begin
+      FormatStr := Arg;
+      if FormatStr.IsEmpty then
+        FormatStr := 'yyyy-MM-dd';
+      Result := FormatDateTime(FormatStr, Now);
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('timestamp',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := FormatDateTime('yyyy-MM-dd HH:mm:ss.zzz', Now);
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('thread',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := IntToStr(TThread.Current.ThreadID);
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('pid',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := IntToStr(Debugger.CurrentProcessId);
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('newline',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := sLineBreak;
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('uppercase',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := UpperCase(Arg);
+    end);
+
+  TLogLayoutEngine.RegisterRenderer('lowercase',
+    function(const Arg: string; const Entry: TLogEntry): string
+    begin
+      Result := LowerCase(Arg);
+    end);
+
+end;
+
 initialization
+
 finalization
-  for var Key in RendererMap.Keys do
-  begin
-    RendererMap[Key] := nil;
-  end;
   FreeAndNil(RendererMap);
 end.
 
