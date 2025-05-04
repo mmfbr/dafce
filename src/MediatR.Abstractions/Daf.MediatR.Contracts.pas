@@ -82,6 +82,7 @@ type
   TBaseHandler = class abstract(TInterfacedObject, IBaseHandler)
   end;
 
+  [MediatorAbstract]
   TRequestHandler<TRequest: class, IRequest> = class abstract(TBaseHandler, IRequestHandler<TRequest>)
   strict private
     FMediator: IMediator;
@@ -93,6 +94,7 @@ type
     property Request: TRequest read FRequest;
   end;
 
+  [MediatorAbstract]
   TResponseHandler<TResponse;TRequest: class, IRequest<TResponse>> = class abstract(TBaseHandler, IRequestHandler<TResponse, TRequest>)
     strict private
     FMediator: IMediator;
@@ -104,6 +106,7 @@ type
     property Request: TRequest read FRequest;
   end;
 
+  [MediatorAbstract]
   TNotificacionHandler<TNotification: class, INotification> = class abstract(TBaseHandler, INotificationHandler<TNotification>)
   strict private
     FMediator: IMediator;
@@ -116,6 +119,7 @@ type
     property Notification: TNotification read FRequest;
   end;
 
+  [MediatorAbstract]
   TRequest<TResponse> = class abstract(TInterfacedObject, IRequest<TResponse>)
   end;
 
