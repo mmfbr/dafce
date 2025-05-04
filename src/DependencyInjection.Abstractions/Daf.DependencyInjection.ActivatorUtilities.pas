@@ -11,7 +11,7 @@ uses
 
 type
 
-  TActivatorUtilitiesConstructorAttribute = class(TCustomAttribute)
+  ActivatorUtilitiesConstructorAttribute = class(TCustomAttribute)
   end;
 
   TActivatorUtilities = class
@@ -23,15 +23,16 @@ type
     class function CanResolveArgs(const Provider: IServiceProvider; const Ctor: TRttiMethod): Boolean;overload;
     class function CanResolveArgs(const Provider: IServiceProvider; const Ctor: TRttiMethod; out Failed: TRttiParameter): Boolean;overload;
     class function CreateInstance(const Provider: IServiceProvider; const AClass: TClass): TObject; overload;
+    class function CreateInstance<T: class>(const Provider: IServiceProvider): T; overload;
   end;
 
+var RC: TRttiContext;
 implementation
 
 uses
   System.SysUtils,
 Daf.Types;
 
-var RC: TRttiContext;
 
 { TActivatorUtilities }
 
@@ -67,6 +68,11 @@ begin
     if not Method.IsConstructor then Continue;
     if not (Method.Visibility in [mvPublic, mvPublished]) then Continue;
     if Assigned(Provider) and not CanResolveArgs(Provider, Method) then Continue;
+    if Method.GetAttribute<ActivatorUtilitiesConstructorAttribute> <> nil then
+    begin
+      Result := [Method];
+      Exit;
+    End;
     Result := Result + [Method];
   end;
   if Length(Result) = 0 then
@@ -116,6 +122,12 @@ begin
   if not TryResolveArgs(Provider, Ctor, Args, Failed) then
     raise EArgumentException.CreateFmt('Cannot resolve argument %s for %s', [Failed.Name, AClass.ClassName]);
   Result := Ctor.Invoke(AClass, Args).AsObject
+end;
+
+class function TActivatorUtilities.CreateInstance<T>(const Provider: IServiceProvider): T;
+begin
+  var MetaClass := (RC.GetType(T) as TRttiInstanceType).MetaclassType;
+  Result := CreateInstance(Provider, MetaClass) as T;
 end;
 
 initialization
