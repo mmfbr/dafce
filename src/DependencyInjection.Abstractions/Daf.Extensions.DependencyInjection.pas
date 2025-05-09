@@ -30,10 +30,8 @@ type
     class operator Implicit(const Provider: IServiceProvider): IServiceProviderImpl;
     function AsType<ServiceType: IInterface>: ServiceType;
     function CanResolve(const ServiceType: PTypeInfo): Boolean;
-    procedure Get(const ServiceType: PTypeInfo; out Service); overload;deprecated;
-    function Get<ServiceType: IInterface>: ServiceType; overload;deprecated;
 
-    procedure GetService(const ServiceType: PTypeInfo; out Service); overload;deprecated;
+    procedure GetService(const ServiceType: PTypeInfo; out Service); overload;
     function GetService<ServiceType: IInterface>: ServiceType; overload;
 
     procedure GetRequiredService(const ServiceType: PTypeInfo; out Service);overload;
@@ -41,6 +39,7 @@ type
 
     function GetServices(const ServiceType: PTypeInfo): IInterfaceList<IInterface>;overload;
     function GetServices<ServiceType: IInterface>: IInterfaceList<ServiceType>; overload;
+
     function TryGet(const ServiceType: PTypeInfo; out Service): Boolean;overload;
     function TryGet<ServiceType: IInterface>(out Service): Boolean;overload;
     function CreateScope: IServiceScope;
@@ -241,37 +240,26 @@ begin
   Result := TryGet(TypeInfo(ServiceType), Service);
 end;
 
-{$WARNINGS OFF}
-function IServiceProvider.Get<ServiceType>: ServiceType;
+procedure IServiceProvider.GetService(const ServiceType: PTypeInfo; out Service);
 begin
-  Result := GetService<ServiceType>;
+  if not TryGet(ServiceType, Service) then
+    IInterface(Service) := nil;
 end;
-
-procedure IServiceProvider.Get(const ServiceType: PTypeInfo; out Service);
-begin
-  GetService(ServiceType, Service);
-end;
-{$WARNINGS ON}
 
 function IServiceProvider.GetService<ServiceType>: ServiceType;
 begin
-  GetRequiredService(TypeInfo(ServiceType), Result);
-end;
-
-function IServiceProvider.GetRequiredService<ServiceType>: ServiceType;
-begin
-  GetRequiredService(TypeInfo(ServiceType), Result);
-end;
-
-procedure IServiceProvider.GetService(const ServiceType: PTypeInfo; out Service);
-begin
-  GetRequiredService(ServiceType, Service);
+  GetService(TypeInfo(ServiceType), Result);
 end;
 
 procedure IServiceProvider.GetRequiredService(const ServiceType: PTypeInfo; out Service);
 begin
   if not TryGet(ServiceType, Service) then
     raise Error('Cannot resolve service: %s', [ServiceType.Name]);
+end;
+
+function IServiceProvider.GetRequiredService<ServiceType>: ServiceType;
+begin
+  GetRequiredService(TypeInfo(ServiceType), Result);
 end;
 
 function IServiceProvider.GetServices<ServiceType>: IInterfaceList<ServiceType>;
@@ -292,7 +280,7 @@ end;
 
 function IServiceProvider.CanResolve(const ServiceType: PTypeInfo): Boolean;
 begin
-  REsult := FImplementor.CanResolve(ServiceType);
+  Result := FImplementor.CanResolve(ServiceType);
 end;
 
 function IServiceProvider.CreateScope: IServiceScope;
