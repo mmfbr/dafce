@@ -38,7 +38,6 @@ type
     property Message: string read GetMessage;
   end;
 
-
   TLogger = class(TInterfacedObject, ILogger)
   private
     FCategory: string;
@@ -89,11 +88,6 @@ type
     procedure LogCritical(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
     procedure LogCritical(const EventId: TEventId; const Ex: Exception; const Msg: string;
       const Args: TArray<TValue> = nil); overload;
-  end;
-
-  TNullLogger = class(TLogger)
-    constructor Create;
-    procedure Log(const Entry: TLogEntry); override;
   end;
 
 implementation
@@ -410,15 +404,4 @@ begin
   Log(Entry);
 end;
 
-{ TNullLogger }
-
-constructor TNullLogger.Create;
-begin
-  inherited Create('');
-end;
-
-procedure TNullLogger.Log(const Entry: TLogEntry);
-begin
-  // null logger does nothing
-end;
 end.

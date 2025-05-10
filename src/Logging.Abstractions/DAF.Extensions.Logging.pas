@@ -203,6 +203,52 @@ type
     function CreateLogger(const AType: PTypeInfo): ILogger; overload;
   end;
 
+  TNullLogger = class(TInterfacedObject, ILogger)
+  private
+  public
+    function BeginScope(const Msg: string; const Args: TArray<TValue>; const ScopedProc: TProc = nil): ILogScopeVoid;overload;
+    function BeginScope(const Msg: string; const ScopedProc: TProc = nil): ILogScopeVoid;overload;
+    procedure Log(const Entry: TLogEntry); overload;
+    procedure Log(const Level: TLogLevel; const EventId: TEventId; const Ex: Exception; const Msg: string;
+      const Args: TArray<TValue> = nil); overload;
+    procedure Log(const Level: TLogLevel; const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure Log(const Level: TLogLevel; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure Log(const Level: TLogLevel; const Msg: string; const Args: TArray<TValue> = nil); overload;
+
+    procedure LogDebug(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogDebug(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogDebug(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogDebug(const Msg: string; const Args: TArray<TValue> = nil); overload;
+
+    procedure LogTrace(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogTrace(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogTrace(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogTrace(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+
+    procedure LogInformation(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogInformation(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogInformation(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogInformation(const EventId: TEventId; const Ex: Exception; const Msg: string;
+      const Args: TArray<TValue> = nil); overload;
+
+    procedure LogWarning(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogWarning(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogWarning(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogWarning(const EventId: TEventId; const Ex: Exception; const Msg: string;
+      const Args: TArray<TValue> = nil); overload;
+
+    procedure LogError(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogError(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogError(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogError(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+
+    procedure LogCritical(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogCritical(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogCritical(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogCritical(const EventId: TEventId; const Ex: Exception; const Msg: string;
+      const Args: TArray<TValue> = nil); overload;
+  end;
+
 implementation
 
 
@@ -338,6 +384,189 @@ begin
     FMessage := FMessage + Scope;
   end;
   Result := FMessage;
+end;
+
+{ TNullLogger }
+
+function TNullLogger.BeginScope(const Msg: string;
+  const ScopedProc: TProc): ILogScopeVoid;
+begin
+  Result := nil;
+end;
+
+function TNullLogger.BeginScope(const Msg: string; const Args: TArray<TValue>;
+  const ScopedProc: TProc): ILogScopeVoid;
+begin
+  Result := nil;
+end;
+
+procedure TNullLogger.Log(const Entry: TLogEntry);
+begin
+
+end;
+
+procedure TNullLogger.Log(const Level: TLogLevel; const EventId: TEventId;
+  const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.Log(const Level: TLogLevel; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.Log(const Level: TLogLevel; const EventId: TEventId;
+  const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.Log(const Level: TLogLevel; const Ex: Exception;
+  const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogCritical(const Ex: Exception; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogCritical(const EventId: TEventId; const Ex: Exception;
+  const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogCritical(const EventId: TEventId; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogCritical(const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogDebug(const EventId: TEventId; const Ex: Exception;
+  const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogDebug(const EventId: TEventId; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogDebug(const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogDebug(const Ex: Exception; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogError(const EventId: TEventId; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogError(const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogError(const Ex: Exception; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogError(const EventId: TEventId; const Ex: Exception;
+  const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogInformation(const Ex: Exception; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogInformation(const EventId: TEventId;
+  const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogInformation(const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogInformation(const EventId: TEventId; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogTrace(const EventId: TEventId; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogTrace(const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogTrace(const Ex: Exception; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogTrace(const EventId: TEventId; const Ex: Exception;
+  const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogWarning(const Msg: string; const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogWarning(const EventId: TEventId; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogWarning(const Ex: Exception; const Msg: string;
+  const Args: TArray<TValue>);
+begin
+
+end;
+
+procedure TNullLogger.LogWarning(const EventId: TEventId; const Ex: Exception;
+  const Msg: string; const Args: TArray<TValue>);
+begin
+
 end;
 
 end.
