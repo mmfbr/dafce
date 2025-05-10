@@ -7,7 +7,7 @@
             <Dependencies/>
         </Projects>
         <Projects Include="DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj">
-            <Dependencies/>
+            <Dependencies>Commons\Daf.Commons.dproj</Dependencies>
         </Projects>
         <Projects Include="Configuration.Abstractions\Daf.Configuration.Abstractions.dproj">
             <Dependencies/>
@@ -68,13 +68,13 @@
     <Target Name="Daf_Commons:Make">
         <MSBuild Projects="Commons\Daf.Commons.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Daf_DependencyInjection_Abstractions">
+    <Target Name="Daf_DependencyInjection_Abstractions" DependsOnTargets="Daf.Commons">
         <MSBuild Projects="DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj"/>
     </Target>
-    <Target Name="Daf_DependencyInjection_Abstractions:Clean">
+    <Target Name="Daf_DependencyInjection_Abstractions:Clean" DependsOnTargets="Daf.Commons:Clean">
         <MSBuild Projects="DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Daf_DependencyInjection_Abstractions:Make">
+    <Target Name="Daf_DependencyInjection_Abstractions:Make" DependsOnTargets="Daf.Commons:Make">
         <MSBuild Projects="DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj" Targets="Make"/>
     </Target>
     <Target Name="Daf_Configuration_Abstractions">

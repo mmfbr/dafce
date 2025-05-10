@@ -23,12 +23,14 @@ type
     FImplementor: IServiceProviderImpl;
     class function Error(const Fmt: string; const Args: array of const): EServiceProviderError; static;
   private
+    function GetFromInterfaceOps(const ServiceType: PTypeInfo): TArray<TRttiMethod>;
   public
     class operator Equal(S: IServiceProvider; P: Pointer): Boolean;
     class operator NotEqual(S: IServiceProvider; P: Pointer): Boolean;
     class operator Implicit(const Implementor: IServiceProviderImpl): IServiceProvider;
     class operator Implicit(const Provider: IServiceProvider): IServiceProviderImpl;
     function AsType<ServiceType: IInterface>: ServiceType;
+
     function CanResolve(const ServiceType: PTypeInfo): Boolean;
 
     procedure GetService(const ServiceType: PTypeInfo; out Service); overload;
@@ -233,6 +235,22 @@ end;
 function IServiceProvider.TryGet(const ServiceType: PTypeInfo; out Service): Boolean;
 begin
   Result := FImplementor.TryGet(ServiceType, Service);
+  if Result then Exit;
+  var Conversors := GetFromInterfaceOps(ServiceType);
+  for var Conversor in Conversors do
+  begin
+    Result := FImplementor.TryGet(Conversor.GetParameters[0].ParamType.Handle, Service);
+    if Result then
+    begin
+      var Arg: TValue;
+      TValue.Make(@Service, Conversor.GetParameters[0].ParamType.Handle, Arg);
+      var Instance: TValue;
+      TValue.Make(nil, ServiceType, Instance);
+      Instance := Conversor.Invoke(Instance, [Arg]);
+      Instance.ExtractRawData(@Service);
+      Exit;
+    end;
+  end;
 end;
 
 function IServiceProvider.TryGet<ServiceType>(out Service): Boolean;
@@ -278,9 +296,19 @@ begin
   Supports(FImplementor, PInfo.TypeData.Guid, Result);
 end;
 
+function IServiceProvider.GetFromInterfaceOps(const ServiceType: PTypeInfo): TArray<TRttiMethod>;
+begin
+  var FImpl := FImplementor;
+  Result :=_T.GetConverFromOps(ServiceType,  function(M: TRttiMethod): Boolean
+              begin
+                var FromType := M.GetParameters[0].ParamType;
+                Result := (FromType.TypeKind = tkInterface) and FImpl.CanResolve(FromType.Handle);
+              end);
+end;
+
 function IServiceProvider.CanResolve(const ServiceType: PTypeInfo): Boolean;
 begin
-  Result := FImplementor.CanResolve(ServiceType);
+  Result := FImplementor.CanResolve(ServiceType) or (GetFromInterfaceOps(ServiceType) <> nil);
 end;
 
 function IServiceProvider.CreateScope: IServiceScope;

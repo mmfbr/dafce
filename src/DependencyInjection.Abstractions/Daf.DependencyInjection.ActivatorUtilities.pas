@@ -26,12 +26,13 @@ type
     class function CreateInstance<T: class>(const Provider: IServiceProvider): T; overload;
   end;
 
-var RC: TRttiContext;
 implementation
 
 uses
   System.SysUtils,
-Daf.Types;
+  Daf.Types;
+
+var RC: TRttiContext;
 
 
 { TActivatorUtilities }
@@ -52,7 +53,7 @@ begin
     var PInfo := Params[idx].ParamType.Handle;
     if (PInfo = TypeInfo(IServiceProviderImpl)) then Continue;
     if (PInfo = TypeInfo(IServiceProvider)) then Continue;
-    if (PInfo.Kind = tkInterface) and Provider.CanResolve(PInfo) then Continue;
+    if (PInfo.Kind in [tkInterface, tkRecord]) and Provider.CanResolve(PInfo) then Continue;
     Failed := Params[idx];
     Exit(False);
   end;
@@ -126,8 +127,7 @@ end;
 
 class function TActivatorUtilities.CreateInstance<T>(const Provider: IServiceProvider): T;
 begin
-  var MetaClass := (RC.GetType(T) as TRttiInstanceType).MetaclassType;
-  Result := CreateInstance(Provider, MetaClass) as T;
+  Result := CreateInstance(Provider, T) as T;
 end;
 
 initialization

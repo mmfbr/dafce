@@ -11,9 +11,11 @@ uses
   Daf.Threading,
   Daf.Extensions.Configuration,
   Daf.Extensions.DependencyInjection,
+  Daf.DependencyInjection.ActivatorUtilities,
   Daf.Configuration.Builder,
   Daf.Configuration.Binder,
   Daf.Configuration.Json,
+
   ConsoleSample.AppSettings in 'ConsoleSample.AppSettings.pas',
   ConsoleSample.Greeter in 'ConsoleSample.Greeter.pas';
 
@@ -33,6 +35,7 @@ begin
     .ConfigureServices(
     procedure(Context: IHostBuilderContext; Services: IServiceCollection)
     begin
+      Services.AddTransient<IWrapperImpl, TWrapper>;
       Services.AddSingleton<IGreeter>(
         function(Services: IServiceProvider): IGreeter
         begin
@@ -48,6 +51,9 @@ begin
     try
       var Greeter := Host.Services.GetService<IGreeter>;
       Greeter.Greet;
+
+      var WA := TActivatorUtilities.CreateInstance<TWrapperAccessor>(Host.Services);
+      Assert(WA.ChecWrapperAccess);
       Host.WaitForShutdown;
     finally
       Host.Stop;

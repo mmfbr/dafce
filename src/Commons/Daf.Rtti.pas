@@ -43,6 +43,8 @@ type
     class function HasProperty<T: class>(const PropName:string): Boolean; overload; static;
     class function HasProperty(T: TClass;const PropName:string): Boolean; overload; static;
     class function HasProperty(Instance: TObject;const PropName:string): Boolean; overload; static;
+
+    class function GetConverFromOps(PInfo: PTypeInfo; Filter: TPredicate<TRttiMethod> = nil): TArray<TRttiMethod>;static;
   end;
 
   TRttiPackageHelper = class Helper for TRttiPackage
@@ -264,6 +266,26 @@ end;
 class function _T.GUID<T>: TGUID;
 begin
   Result := _T.GUID(TypeInfo(T));
+end;
+
+class function _T.GetConverFromOps(PInfo: PTypeInfo; Filter: TPredicate<TRttiMethod> = nil): TArray<TRttiMethod>;
+begin
+  Result := nil;
+  var RC := TRttiContext.Create;
+  try
+    var RType := RC.GetType(PInfo);
+    for var M in RType.GetMethods do
+    begin
+      if (M.Name = '&op_Implicit') and (M.ReturnType.Handle = PInfo) then
+        if not Assigned(Filter) or Filter(M) then
+          Result := Result + [M];
+    end;
+  finally
+    RC.Free;
+  end;
+
+      // Probar si existe operador de conversion implicita
+
 end;
 
 class function _T.GUID(const PInfo: PTypeInfo): TGUID;

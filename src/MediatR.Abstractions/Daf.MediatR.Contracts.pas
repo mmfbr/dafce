@@ -67,6 +67,9 @@ type
   public
     class operator Implicit(Impl: IMediatorImpl): IMediator;
     class operator Implicit(Med: IMediator): IMediatorImpl;
+    class operator Equal(Med: IMediator; P: Pointer): Boolean;
+    class operator NotEqual(Med: IMediator; P: Pointer): Boolean;
+
     procedure Send<TRequest: class, IRequest>(Request: TRequest);overload;
     function Send<TResponse; TRequest: class, IRequest<TResponse>>(Request: TRequest): TResponse; overload;
     procedure Publish<TNotification: class, INotification>(Notification: TNotification);
@@ -148,6 +151,16 @@ end;
 class operator IMediator.Implicit(Impl: IMediatorImpl): IMediator;
 begin
   Result.FImpl := Impl;
+end;
+
+class operator IMediator.Equal(Med: IMediator; P: Pointer): Boolean;
+begin
+  Result := Pointer(Med.FImpl) = P;
+end;
+
+class operator IMediator.NotEqual(Med: IMediator; P: Pointer): Boolean;
+begin
+  Result := Pointer(Med.FImpl) <> P;
 end;
 
 class operator IMediator.Implicit(Med: IMediator): IMediatorImpl;

@@ -22,6 +22,36 @@ type
     procedure Greet;
   end;
 
+  IWrapperImpl = interface(IInvokable)
+    function Alive: Boolean;
+  end;
+
+  TWrapper = class(TInterfacedObject, IWrapperImpl)
+  public
+    function Alive: Boolean;
+  end;
+
+  IWrapper = record
+  private
+    FImpl: IWrapperImpl;
+  public
+    class operator Implicit(Impl: IWrapperImpl): IWrapper;
+    class operator Implicit(Value: IWrapper): IWrapperImpl;
+    class operator Equal(Value: IWrapper; P: Pointer): Boolean;
+    class operator NotEqual(Value: IWrapper; P: Pointer): Boolean;
+    function Alive: Boolean;inline;
+  end;
+
+  TWrapperAccessor = class
+  private
+    FWrapper: IWrapper;
+  public
+    // Como alternativa se puede requerir directamente IConfiguration
+    constructor Create(Wrapper: IWrapper);
+    function ChecWrapperAccess: Boolean;
+    property Wrapper: IWrapper read FWrapper;
+  end;
+
 implementation
 
 uses
@@ -42,6 +72,53 @@ begin
   Writeln(Format('  %s v%s', [FTitle, FVersion]));
   Writeln(StringOfChar('=', 30));
   Writeln(FMessage);
+end;
+
+{ IWrapper }
+
+function IWrapper.Alive: Boolean;
+begin
+  Result := FImpl.Alive;
+end;
+
+class operator IWrapper.Implicit(Impl: IWrapperImpl): IWrapper;
+begin
+  Result.FImpl := Impl;
+end;
+
+class operator IWrapper.Implicit(Value: IWrapper): IWrapperImpl;
+begin
+  Result := Value.FImpl;
+end;
+
+class operator IWrapper.Equal(Value: IWrapper; P: Pointer): Boolean;
+begin
+  Result := Pointer(Value.FImpl) = P;
+end;
+
+class operator IWrapper.NotEqual(Value: IWrapper; P: Pointer): Boolean;
+begin
+  Result := Pointer(Value.FImpl) <> P;
+end;
+
+{ TWrapper }
+
+function TWrapper.Alive: Boolean;
+begin
+  Result := True;
+end;
+
+{ TWrapperAcessor }
+
+function TWrapperAccessor.ChecWrapperAccess: Boolean;
+begin
+  Result := (Wrapper <> nil) and Wrapper.Alive;
+end;
+
+constructor TWrapperAccessor.Create(Wrapper: IWrapper);
+begin
+  inherited Create;
+  FWrapper := Wrapper;
 end;
 
 end.
