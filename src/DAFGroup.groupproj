@@ -22,7 +22,7 @@
             <Dependencies>DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj;Commons\Daf.Commons.dproj</Dependencies>
         </Projects>
         <Projects Include="DependencyInjection\Daf.DependencyInjection.dproj">
-            <Dependencies/>
+            <Dependencies>DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj</Dependencies>
         </Projects>
         <Projects Include="Configuration\Daf.Configuration.dproj">
             <Dependencies>Commons\Daf.Commons.dproj;Configuration.Abstractions\Daf.Configuration.Abstractions.dproj</Dependencies>
@@ -40,7 +40,7 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Application\Daf.Application.dproj">
-            <Dependencies/>
+            <Dependencies>Hosting\Daf.Hosting.dproj</Dependencies>
         </Projects>
         <Projects Include="..\samples\ConfigSample\ConfigExample.dproj">
             <Dependencies/>
@@ -113,13 +113,13 @@
     <Target Name="Daf_MediatR_Abstractions:Make" DependsOnTargets="Daf.DependencyInjection.Abstractions:Make;Daf.Commons:Make">
         <MSBuild Projects="MediatR.Abstractions\Daf.MediatR.Abstractions.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Daf_DependencyInjection">
+    <Target Name="Daf_DependencyInjection" DependsOnTargets="Daf.DependencyInjection.Abstractions">
         <MSBuild Projects="DependencyInjection\Daf.DependencyInjection.dproj"/>
     </Target>
-    <Target Name="Daf_DependencyInjection:Clean">
+    <Target Name="Daf_DependencyInjection:Clean" DependsOnTargets="Daf.DependencyInjection.Abstractions:Clean">
         <MSBuild Projects="DependencyInjection\Daf.DependencyInjection.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Daf_DependencyInjection:Make">
+    <Target Name="Daf_DependencyInjection:Make" DependsOnTargets="Daf.DependencyInjection.Abstractions:Make">
         <MSBuild Projects="DependencyInjection\Daf.DependencyInjection.dproj" Targets="Make"/>
     </Target>
     <Target Name="Daf_Configuration" DependsOnTargets="Daf.Commons;Daf.Configuration.Abstractions">
@@ -167,13 +167,13 @@
     <Target Name="Daf_MediatR:Make">
         <MSBuild Projects="MediatR\Daf.MediatR.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Daf_Application">
+    <Target Name="Daf_Application" DependsOnTargets="Daf.Hosting">
         <MSBuild Projects="Application\Daf.Application.dproj"/>
     </Target>
-    <Target Name="Daf_Application:Clean">
+    <Target Name="Daf_Application:Clean" DependsOnTargets="Daf.Hosting:Clean">
         <MSBuild Projects="Application\Daf.Application.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Daf_Application:Make">
+    <Target Name="Daf_Application:Make" DependsOnTargets="Daf.Hosting:Make">
         <MSBuild Projects="Application\Daf.Application.dproj" Targets="Make"/>
     </Target>
     <Target Name="ConfigExample">
@@ -214,23 +214,11 @@
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Debug'">
-        <BuildGroupProject Include="Logging.Abstractions\Daf.Logging.Abstractions.dproj">
-            <ProjectGuid>{801A8667-A514-45BA-9399-C62ADB1E464C}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="Commons\Daf.Commons.dproj">
             <ProjectGuid>{FDED9015-CB12-4A04-B5B1-5675AE520E2A}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="NNLog\Daf.NNlog.dproj">
-            <ProjectGuid>{F14570BD-81F7-4D28-A8FB-327CB0356102}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Configuration.Abstractions\Daf.Configuration.Abstractions.dproj">
             <ProjectGuid>{6A26CAFA-E1C8-4FC1-A24B-2B3023A8E826}</ProjectGuid>
@@ -240,12 +228,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="..\samples\HostedService\HostedService.dproj">
             <ProjectGuid>{E1C4A9B8-7400-4A92-BB55-985F1F274BF4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\samples\ConfigSample\ConfigExample.dproj">
-            <ProjectGuid>{69AB8E0D-166B-4C7B-9AF0-726C60EDC20C}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -262,14 +244,38 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj">
-            <ProjectGuid>{8E0F52D4-F287-4899-B3BE-57A0D38C2AC7}</ProjectGuid>
+        <BuildGroupProject Include="..\samples\ConsoleSample\ConsoleSample.dproj">
+            <ProjectGuid>{EDE5D497-4A70-48F9-8CB0-3928541B85C0}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\samples\ConsoleSample\ConsoleSample.dproj">
-            <ProjectGuid>{EDE5D497-4A70-48F9-8CB0-3928541B85C0}</ProjectGuid>
+        <BuildGroupProject Include="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj">
+            <ProjectGuid>{7AE0E470-84D4-438F-8293-DB38BC5AF1B0}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Logging.Abstractions\Daf.Logging.Abstractions.dproj">
+            <ProjectGuid>{801A8667-A514-45BA-9399-C62ADB1E464C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="NNLog\Daf.NNlog.dproj">
+            <ProjectGuid>{F14570BD-81F7-4D28-A8FB-327CB0356102}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\samples\ConfigSample\ConfigExample.dproj">
+            <ProjectGuid>{69AB8E0D-166B-4C7B-9AF0-726C60EDC20C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj">
+            <ProjectGuid>{8E0F52D4-F287-4899-B3BE-57A0D38C2AC7}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -279,12 +285,6 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj">
-            <ProjectGuid>{7AE0E470-84D4-438F-8293-DB38BC5AF1B0}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Application\Daf.Application.dproj">
             <ProjectGuid>{A2BA094C-B976-4DA0-A597-F0DA4591471F}</ProjectGuid>

@@ -53,9 +53,11 @@ begin
     var PInfo := Params[idx].ParamType.Handle;
     if (PInfo = TypeInfo(IServiceProviderImpl)) then Continue;
     if (PInfo = TypeInfo(IServiceProvider)) then Continue;
-    if (PInfo.Kind in [tkInterface, tkRecord]) and Provider.CanResolve(PInfo) then Continue;
-    Failed := Params[idx];
-    Exit(False);
+    if (PInfo.Kind in [tkInterface, tkClass]) and not Provider.CanResolve(PInfo) then
+    begin
+      Failed := Params[idx];
+      Exit(False);
+    end;
   end;
 end;
 
@@ -99,11 +101,13 @@ begin
   for var idx := 0 to Length(Params) - 1 do
   begin
     var PInfo := Params[idx].ParamType.Handle;
+    if not (Pinfo.Kind in [tkInterface, tkClass, tkRecord]) then Continue;
+
     var Aux: IInterface;
     if (PInfo = TypeInfo(IServiceProviderImpl)) or (PInfo = TypeInfo(IServiceProvider)) then
       Aux := Provider
     else
-    if not Provider.TryGet(PInfo, Aux) then
+    if not Provider.TryGet(PInfo, Aux) and (Pinfo.Kind <> tkRecord) then
     begin
       Failed := Params[idx];
       Exit(False);
