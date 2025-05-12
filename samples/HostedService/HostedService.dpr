@@ -5,6 +5,7 @@
 uses
   System.SysUtils,
   System.IOUtils,
+  Daf.Extensions.Logging,
   Daf.Logging.Provider,
   Daf.Logging.Builder,
   Daf.Extensions.Hosting,
@@ -43,6 +44,7 @@ begin
         end);
 
     var App := Builder.Build;
+
     App.Run(True);
   except
     on E: exception do

@@ -37,14 +37,16 @@ type
 
   TDescriptorsDictionary = TObjectDictionary<PTypeInfo, TServiceDescriptors>;
   TServiceScope = class;
+
   // Es un singleton. Contiene la lista de todos los Scopes creados. El primer Scope creado, es
   // el Scope que contiene los sercvicios con lifetime Singleton
   TServiceScopeFactory = class(TDIObject<TServiceScopeFactory>, IServiceScopeFactory, IContainerAccess)
   strict private
     FServiceCollection: IServiceCollectionImpl;
-    FScopes: TObjectList<TServiceScope>;
+
     FSingletonScope: IServiceScope;
     FShutDonwnDone: Boolean;
+    FScopes: TList<IServiceScope>;
     function GetSingletonsScope: IServiceScope;
   protected
     procedure Shutdown;
@@ -64,11 +66,12 @@ type
 
   TServiceScope = class(TDIObject<TServiceScope>, IServiceScope, IServiceProviderImpl, IServiceResolver)
   private
+    [Weak]
     FScopeFactory: TServiceScopeFactory;
     [Weak]
     FServiceCollection: IServiceCollectionImpl;
     FServiceInstances : TOrderedDictionary<string, IInterface>;
-    FCreateSingletons: TStack<TServiceDescriptor>;
+    FCreatingSingletons: TStack<TServiceDescriptor>;
     FIsSingletonsScope: Boolean;
     function GetServiceIdentity(Descriptor: TServiceDescriptor): TServiceIdentity;
     function CreateInstance(const Descriptor: TServiceDescriptor; const Provider: IServiceProvider): IInterface;
@@ -82,6 +85,7 @@ type
     function GetSingletonsScope: IServiceResolver;
     procedure AddServiceInstance(const Descriptor: TServiceDescriptor; const Service: IInterface);
     function CanResolve(const ServiceType: PTypeInfo): Boolean;
+    procedure CollectGarbage;
   protected
     property IsSingletonsScope: Boolean read FIsSingletonsScope;
     property ScopeFactory: TServiceScopeFactory read FScopeFactory;
@@ -240,10 +244,15 @@ constructor TServiceScopeFactory.Create(const ServiceCollection: IServiceCollect
 begin
   inherited Create;
   FServiceCollection := ServiceCollection;
-  FScopes := TObjectList<TServiceScope>.Create(False);
+  FScopes := TList<IServiceScope>.Create;
+
+  // note is not in FScopes
   FSingletonScope := TServiceScope.Create(Self, True);
-  FScopes.Add(FSingletonScope as TServiceScope);
+
   ServiceCollection.AddSingleton<IServiceScopeFactory>(Self);
+
+  //Forzamos que se Self se referencie como Singleton;
+  FSingletonScope.ServiceProvider.GetRequiredService<IServiceScopeFactory>;
 end;
 
 destructor TServiceScopeFactory.Destroy;
@@ -256,25 +265,30 @@ procedure TServiceScopeFactory.Shutdown;
 begin
   if FShutDonwnDone then Exit;
   FShutDonwnDone := True;
+  _AddRef;
+
   var Scopes := FScopes.ToArray;
-  FScopes.Clear;
-  // los singletons se crean los primeros. Entre ellos esta Self
+  FSCopes.Clear;
+
+  for var idx := High(Scopes) to Low(Scopes) do
+       TServiceScope(Scopes[idx]).Shutdown;
   for var idx := High(Scopes) downto Low(Scopes) do
-  begin
-    Scopes[idx].Shutdown;
-  end;
+    Scopes[idx] := nil;
+
+  TServiceScope(FSingletonScope).Shutdown;
+  FServiceCollection := nil;
+  FSingletonScope := nil;
 end;
 
 function TServiceScopeFactory.CreateScope: IServiceScope;
 begin
-  var Scope := TServiceScope.Create(Self);
-  FScopes.Add(Scope);
-  Result := Scope;
+  Result := TServiceScope.Create(Self);
+  FScopes.Add(Result);
 end;
 
 function TServiceScopeFactory.GetSingletonsScope: IServiceScope;
 begin
-  Result := FScopes[0];
+  Result := FSingletonScope;
 end;
 
 { TServiceScope }
@@ -282,17 +296,19 @@ end;
 constructor TServiceScope.Create(const Factory: TServiceScopeFactory; const SingletonsScope: Boolean = False);
 begin
   inherited Create;
-  FServiceInstances := TOrderedDictionary<string, IInterface>.Create;
-  FCreateSingletons := TStack<TServiceDescriptor>.Create;
-  FIsSingletonsScope := SingletonsScope;
   FScopeFactory := Factory;
+  FServiceInstances := TOrderedDictionary<string, IInterface>.Create;
+  FIsSingletonsScope := SingletonsScope;
+  FCreatingSingletons := TStack<TServiceDescriptor>.Create;
   FServiceCollection := Factory.ServiceCollection;
 end;
 
 destructor TServiceScope.Destroy;
 begin
+  // Just in case this Scope is temporal, and we not are in Shutdown
+  CollectGarbage;
   FServiceInstances.Free;
-  FCreateSingletons.Free;
+  FCreatingSingletons.Free;
   inherited;
 end;
 
@@ -324,38 +340,54 @@ end;
 
 function TServiceScope.GetSingletonsScope: IServiceResolver;
 begin
-  if IsSingletonsScope  then Exit(nil);
+  if IsSingletonsScope  then Exit(Self);
   Result := FScopeFactory.SingletonsScope as IServiceResolver;
 end;
 
-procedure TServiceScope.Shutdown;
+procedure TServiceScope.CollectGarbage;
 type
   POBject = ^TObject;
 begin
+
   var Services := FServiceInstances.Values.ToArray;
   FServiceInstances.Clear;
-  var RCtx := TRttiContext.Create;
+
   // Los servicios se crean en orden de dependencia
   // preparamos para destruccion haciendo que
   // cada servicio deje de referenciar a otros:
-  for var idx := High(Services) downto Low(Services) do
-  begin
-    var Implementor := Services[idx] as TObject;
-    var RImpl := RCtx.GetType(Implementor.ClassInfo);
-    var Fields := RImpl.GetFields;
-    for var Field in Fields do
+  var RCtx := TRttiContext.Create;
+  try
+    for var idx := High(Services) downto 1 + Low(Services) do
     begin
-      if not Field.FieldType.IsInterface then Continue;
-      var ObjRef := Field.GetValue(Implementor).AsInterface as TObject;
-      if ObjRef = nil then Continue;
-      if not (ObjRef is TInterfacedObject) then Continue;
-      if TInterfacedObject(ObjRef).RefCount <= 0 then
-        PObject(PByte(Implementor) + Field.Offset)^ := nil
-      else
-        Field.SetValue(Implementor, nil);
+      var Implementor := Services[idx] as TObject;
+      if Implementor = FScopeFactory then Continue;
+
+      var RImpl := RCtx.GetType(Implementor.ClassInfo);
+      var Fields := RImpl.GetFields;
+      for var Field in Fields do
+      begin
+        if not Field.FieldType.IsInterface then Continue;
+        var ObjRef := Field.GetValue(Implementor).AsInterface as TObject;
+        if ObjRef = nil then Continue;
+        if not (ObjRef is TInterfacedObject) then Continue;
+        if TInterfacedObject(ObjRef).RefCount <= 0 then
+          PObject(PByte(Implementor) + Field.Offset)^ := nil
+        else
+          Field.SetValue(Implementor, nil);
+      end;
     end;
-    Services[idx] := nil;
+
+    for var idx := High(Services) downto Low(Services) do
+      Services[idx] := nil;
+
+  finally
+    RCtx.Free;
   end;
+end;
+
+procedure TServiceScope.Shutdown;
+begin
+  CollectGarbage;
 end;
 
 function TServiceScope.ServiceProvider: IServiceProvider;
@@ -410,12 +442,12 @@ end;
 
 procedure TServiceScope.BeginCreateSingleton(const Descriptor: TServiceDescriptor);
 begin
-  FCreateSingletons.Push(Descriptor);
+  FCreatingSingletons.Push(Descriptor);
 end;
 
 procedure TServiceScope.EndCreateSingleton;
 begin
-  FCreateSingletons.Pop;
+  FCreatingSingletons.Pop;
 end;
 
 function TServiceScope.GetImplementor(const Descriptor: TServiceDescriptor): IInterface;
@@ -428,8 +460,8 @@ begin
       EndCreateSingleton;
     end;
     Scoped: begin
-      if not FCreateSingletons.IsEmpty then
-        raise Exception.CreateFmt('singleton %s cannot depends on scoped %s ',[FCreateSingletons.Peek.ServiceName, Descriptor.ServiceName]);
+      if not FCreatingSingletons.IsEmpty then
+        raise Exception.CreateFmt('singleton %s cannot depends on scoped %s ',[FCreatingSingletons.Peek.ServiceName, Descriptor.ServiceName]);
       Result := Self.GetOrCreate(Descriptor, Self);
     end;
     Transient: Result := Self.CreateInstance(Descriptor, Self);

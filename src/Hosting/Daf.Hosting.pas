@@ -311,7 +311,8 @@ begin
 
     if Assigned(Lifetime) then
       (Lifetime as THostApplicationLifetime).NotifyStopped;
-      FContainerAccess.Shutdown;
+    FServices := nil;
+    FContainerAccess.Shutdown;
   finally
     TMonitor.Exit(Self);
   end;
