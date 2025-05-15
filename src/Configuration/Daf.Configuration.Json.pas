@@ -65,7 +65,7 @@ begin
   Data.Clear;
   JSONValue := TJSONObject.ParseJSONValue(TFile.ReadAllText(FFileName));
   if not Assigned(JSONValue) then
-    Exit; // O lanza excepción
+    raise Exception.CreateFmt('Cannot parse json in file "%s" ', [FFileName]);
 
   try
     if JSONValue is TJSONObject then
