@@ -210,6 +210,7 @@ end;
 destructor TLogger.Destroy;
 begin
   FScopes.Free;
+  inherited
 end;
 
 function TLogger.BeginScope(const Msg: string; const ScopedProc: TProc): ILogScopeVoid;
