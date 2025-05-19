@@ -1,4 +1,4 @@
-unit Daf.Types;
+﻿unit Daf.Types;
 
 interface
 
@@ -32,6 +32,37 @@ type
     property Value[const Name:string]: TMacroExpression read GetExpression write SetExpression;default;
     property ValueFromIndex[Index: Integer]:string read GetValueFromIndex;
   end;
+
+  /// <summary>
+  ///   Clase para leer y almacenar las variables de entorno en un diccionario.
+  ///   Llama a Refresh() para actualizar la lista en cualquier momento.
+  ///   Usa
+  /// </summary>
+  TEnvVars = class
+  private
+    FBuffer: PWideChar;
+    FVars: TDictionary<string, string>;
+    function GetBuffer: PWideChar;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    /// <summary>
+    ///   Lee todas las variables de entorno desde el sistema
+    ///   y las almacena en FVars.
+    /// </summary>
+    procedure Refresh;
+    procedure ClearBuffer;
+    procedure WriteTo(var Buffer: PWideChar);
+
+    /// <summary>
+    ///   Devuelve el diccionario con las variables de entorno recopiladas.
+    ///   Si deseas recargarlas, llama primero a Refresh.
+    /// </summary>
+    property Vars: TDictionary<string, string> read FVars;
+    property Buffer: PWideChar read GetBuffer;
+  end;
+
 
   Coalesce = record
     /// Returns the first arg not nil or nil
@@ -67,7 +98,82 @@ uses
 {$ENDIF LINUX}
 {$ENDIF POSIX}
   System.RegularExpressions,
+  System.Generics.Defaults,
   System.StrUtils;
+
+{ TEnvVars }
+
+constructor TEnvVars.Create;
+begin
+  inherited Create;
+  FVars := TDictionary<string,string>.Create(TIStringComparer.Ordinal);
+  Refresh;
+end;
+
+destructor TEnvVars.Destroy;
+begin
+  ClearBuffer;
+  FVars.Free;
+  inherited;
+end;
+
+function TEnvVars.GetBuffer: PWideChar;
+begin
+  WriteTo(FBuffer);
+  Result := FBuffer;
+end;
+
+procedure TEnvVars.ClearBuffer;
+begin
+  FreeMem(FBuffer);
+  FBuffer := nil;
+end;
+
+procedure TEnvVars.WriteTo(var Buffer: PWideChar);
+begin
+  var Temp := '';
+  for var Pair in Vars do
+    Temp := Temp + Pair.Key + '=' + Pair.Value + #0;
+
+  Temp := Temp + #0;
+
+  // Temp continas #0 in the middle, cannot use StrNew or similars
+  var Len := 1 + Length(Temp);
+  GetMem(Buffer, Len * SizeOf(Char));
+  Move(PByte(Temp)^, Buffer^, Len * SizeOf(Char));
+end;
+
+procedure TEnvVars.Refresh;
+begin
+  ClearBuffer;
+  FVars.Clear;
+
+  FBuffer := GetEnvironmentStringsW;
+
+  if FBuffer = nil then
+    Exit;
+
+  try
+    var EnvBlock := FBuffer;
+    while EnvBlock^ <> #0 do
+    begin
+      var EnvLine := string(EnvBlock);
+
+      var i := EnvLine.IndexOf('=');
+      if i > 0 then
+      begin
+        var Key := EnvLine.Substring(0, i);
+        var Value := EnvLine.Substring(i + 1);
+        FVars.AddOrSetValue(Key.ToUpper, Value);
+      end;
+
+      Inc(EnvBlock, Length(EnvLine) + 1);
+    end;
+  finally
+    FreeEnvironmentStringsW(FBuffer);
+    FBuffer := nil;
+  end;
+end;
 
 { TMacrosList }
 

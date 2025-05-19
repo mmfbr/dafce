@@ -51,6 +51,9 @@
         <Projects Include="..\samples\HostedService\HostedService.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="..\samples\PingProcess\PingProcess.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -203,14 +206,23 @@
     <Target Name="HostedService:Make">
         <MSBuild Projects="..\samples\HostedService\HostedService.dproj" Targets="Make"/>
     </Target>
+    <Target Name="PingProcess">
+        <MSBuild Projects="..\samples\PingProcess\PingProcess.dproj"/>
+    </Target>
+    <Target Name="PingProcess:Clean">
+        <MSBuild Projects="..\samples\PingProcess\PingProcess.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PingProcess:Make">
+        <MSBuild Projects="..\samples\PingProcess\PingProcess.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Daf_Commons;Daf_DependencyInjection_Abstractions;Daf_Configuration_Abstractions;Daf_Hosting_Abstractions;Daf_Logging_Abstractions;Daf_MediatR_Abstractions;Daf_DependencyInjection;Daf_Configuration;Daf_Hosting;Daf_Logging;Daf_NNlog;Daf_MediatR;Daf_Application;ConfigExample;ConsoleSample;HostedService"/>
+        <CallTarget Targets="Daf_Commons;Daf_DependencyInjection_Abstractions;Daf_Configuration_Abstractions;Daf_Hosting_Abstractions;Daf_Logging_Abstractions;Daf_MediatR_Abstractions;Daf_DependencyInjection;Daf_Configuration;Daf_Hosting;Daf_Logging;Daf_NNlog;Daf_MediatR;Daf_Application;ConfigExample;ConsoleSample;HostedService;PingProcess"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Daf_Commons:Clean;Daf_DependencyInjection_Abstractions:Clean;Daf_Configuration_Abstractions:Clean;Daf_Hosting_Abstractions:Clean;Daf_Logging_Abstractions:Clean;Daf_MediatR_Abstractions:Clean;Daf_DependencyInjection:Clean;Daf_Configuration:Clean;Daf_Hosting:Clean;Daf_Logging:Clean;Daf_NNlog:Clean;Daf_MediatR:Clean;Daf_Application:Clean;ConfigExample:Clean;ConsoleSample:Clean;HostedService:Clean"/>
+        <CallTarget Targets="Daf_Commons:Clean;Daf_DependencyInjection_Abstractions:Clean;Daf_Configuration_Abstractions:Clean;Daf_Hosting_Abstractions:Clean;Daf_Logging_Abstractions:Clean;Daf_MediatR_Abstractions:Clean;Daf_DependencyInjection:Clean;Daf_Configuration:Clean;Daf_Hosting:Clean;Daf_Logging:Clean;Daf_NNlog:Clean;Daf_MediatR:Clean;Daf_Application:Clean;ConfigExample:Clean;ConsoleSample:Clean;HostedService:Clean;PingProcess:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Daf_Commons:Make;Daf_DependencyInjection_Abstractions:Make;Daf_Configuration_Abstractions:Make;Daf_Hosting_Abstractions:Make;Daf_Logging_Abstractions:Make;Daf_MediatR_Abstractions:Make;Daf_DependencyInjection:Make;Daf_Configuration:Make;Daf_Hosting:Make;Daf_Logging:Make;Daf_NNlog:Make;Daf_MediatR:Make;Daf_Application:Make;ConfigExample:Make;ConsoleSample:Make;HostedService:Make"/>
+        <CallTarget Targets="Daf_Commons:Make;Daf_DependencyInjection_Abstractions:Make;Daf_Configuration_Abstractions:Make;Daf_Hosting_Abstractions:Make;Daf_Logging_Abstractions:Make;Daf_MediatR_Abstractions:Make;Daf_DependencyInjection:Make;Daf_Configuration:Make;Daf_Hosting:Make;Daf_Logging:Make;Daf_NNlog:Make;Daf_MediatR:Make;Daf_Application:Make;ConfigExample:Make;ConsoleSample:Make;HostedService:Make;PingProcess:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Debug'">
@@ -285,6 +297,12 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\samples\PingProcess\PingProcess.dproj">
+            <ProjectGuid>{E8416DF2-5F1D-425B-AFE6-0C3D07085630}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Application\Daf.Application.dproj">
             <ProjectGuid>{A2BA094C-B976-4DA0-A597-F0DA4591471F}</ProjectGuid>

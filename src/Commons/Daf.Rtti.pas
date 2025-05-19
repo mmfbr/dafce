@@ -80,6 +80,10 @@ type
   _ = class
   end;
 
+  TEnum = record
+    class function ToString<T>(Value: T): string;static;inline;
+  end;
+
   TGenericRTTI = class
   public
     class function GetGenericArguments(AType: TRttiType): TArray<TRttiType>;
@@ -508,6 +512,12 @@ begin
   Result := not (IsObject or IsCollection or IsDictionary or IsArray);
 end;
 
+{ TEnum }
+
+class function TEnum.ToString<T>(Value: T): string;
+begin
+  Result := TRttiEnumerationType.GetName<T>(Value);
+end;
 
 { TGenericRTTI }
 
@@ -573,7 +583,6 @@ class procedure TPropInjector.AssignTo<TTarget, TSource>(const Source: TSource; 
 begin
   Assign(Target, Source);
 end;
-
 
 class procedure TPropInjector.Assign<TTarget, TSource>(const Target: TTarget; const Source: TSource);
 var

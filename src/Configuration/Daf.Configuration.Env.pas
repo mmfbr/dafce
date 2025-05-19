@@ -12,30 +12,6 @@ uses
 
 type
   /// <summary>
-  ///   Clase para leer y almacenar las variables de entorno en un diccionario.
-  ///   Llama a Refresh() para actualizar la lista en cualquier momento.
-  /// </summary>
-  TEnvVars = class
-  private
-    FVars: TDictionary<string, string>;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    /// <summary>
-    ///   Lee todas las variables de entorno desde el sistema
-    ///   y las almacena en FVars.
-    /// </summary>
-    procedure Refresh;
-
-    /// <summary>
-    ///   Devuelve el diccionario con las variables de entorno recopiladas.
-    ///   Si deseas recargarlas, llama primero a Refresh.
-    /// </summary>
-    property Vars: TDictionary<string, string> read FVars;
-  end;
-
-  /// <summary>
   ///   Proveedor de configuración para cargar variables de entorno.
   ///   Permite filtrar por prefijo y reemplazar '__' por ':' para sub-secciones.
   /// </summary>
@@ -89,57 +65,8 @@ type
   end;
 
 implementation
-
-{ TEnvVars }
-
-constructor TEnvVars.Create;
-begin
-  inherited Create;
-  FVars := TDictionary<string,string>.Create;
-  Refresh;
-end;
-
-destructor TEnvVars.Destroy;
-begin
-  FVars.Free;
-  inherited;
-end;
-
-procedure TEnvVars.Refresh;
-var
-  EnvStrings: PChar;
-  EnvBlock: PChar;
-  EnvLine: string;
-  i: Integer;
-  Key, Value: string;
-begin
-  FVars.Clear;
-
-  EnvStrings := GetEnvironmentStrings;
-  if EnvStrings = nil then
-    Exit;
-
-  try
-    EnvBlock := EnvStrings;
-    while EnvBlock^ <> #0 do
-    begin
-      EnvLine := string(EnvBlock);
-
-      i := EnvLine.IndexOf('=');
-      if i > 0 then
-      begin
-        Key := EnvLine.Substring(0, i);
-        Value := EnvLine.Substring(i + 1);
-        FVars.AddOrSetValue(Key, Value);
-      end;
-
-      Inc(EnvBlock, Length(EnvLine) + 1);
-    end;
-  finally
-    FreeEnvironmentStrings(EnvStrings);
-  end;
-end;
-
+uses
+  Daf.Types;
 { TEnvironmentVariablesConfigurationProvider }
 
 constructor TEnvironmentVariablesConfigurationProvider.Create(const APrefix: string; AConvertDoubleUnderscore: Boolean);

@@ -67,6 +67,7 @@ type
   public
     // You can translate this message on app start
     class var PresCtlCMsg: string;
+    class var OnShutdownRequested: TProc;
     class constructor Create;
     class destructor Destroy;
     class procedure WaitForShutdown;
@@ -423,6 +424,8 @@ begin
   FCtrlHandlerEntered := True;
   FTerminated := True;
   FEvent.SetEvent;
+  if Assigned(OnShutdownRequested) then
+    OnShutdownRequested;
 end;
 
 {$IFDEF MSWINDOWS}
