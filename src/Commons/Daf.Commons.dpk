@@ -41,7 +41,6 @@ contains
   Daf.Arrays in 'Daf.Arrays.pas',
   Daf.Enumerable in 'Daf.Enumerable.pas',
   Daf.Threading in 'Daf.Threading.pas',
-  Daf.Proccess in 'Daf.Proccess.pas',
   Daf.SystemProcess in 'Daf.SystemProcess.pas';
 
 end.
