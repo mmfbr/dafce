@@ -182,7 +182,7 @@ type
 
     procedure LogError(const Msg: string; const Args: TArray<TValue> = nil); overload;
     procedure LogError(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
-    procedure LogError(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogError(const Ex: Exception; const Msg: string = ''; const Args: TArray<TValue> = nil); overload;
     procedure LogError(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
 
     procedure LogCritical(const Msg: string; const Args: TArray<TValue> = nil); overload;
@@ -239,7 +239,7 @@ type
 
     procedure LogError(const Msg: string; const Args: TArray<TValue> = nil); overload;
     procedure LogError(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
-    procedure LogError(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogError(const Ex: Exception; const Msg: string = ''; const Args: TArray<TValue> = nil); overload;
     procedure LogError(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
 
     procedure LogCritical(const Msg: string; const Args: TArray<TValue> = nil); overload;
@@ -487,8 +487,8 @@ begin
 
 end;
 
-procedure TNullLogger.LogError(const Ex: Exception; const Msg: string;
-  const Args: TArray<TValue>);
+procedure TNullLogger.LogError(const Ex: Exception; const Msg: string = '';
+  const Args: TArray<TValue> = nil);
 begin
 
 end;
