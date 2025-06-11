@@ -65,6 +65,19 @@ begin
   inherited Destroy;
 end;
 
+procedure DumpAppSettings(const Settings: TAppSettings);
+begin
+  Writeln('Host: ', Settings.Host);
+  Writeln('Port: ', Settings.Port);
+  Writeln('UseSsl: ', BoolToStr(Settings.UseSsl, True));
+  for var user in Settings.Users do
+  begin
+    Writeln('User: ', user.Name);
+    for var role in user.Roles do
+      Writeln('  Role: ', role);
+  end;
+end;
+
 { TFileConfigSample }
 
 procedure Dump(Title: string; const Config: IConfiguration; const Indent: string = '');
@@ -88,19 +101,6 @@ begin
   end;
 end;
 
-procedure DumpAppSettings(const Settings: TAppSettings);
-begin
-  Writeln('Host: ', Settings.Host);
-  Writeln('Port: ', Settings.Port);
-  Writeln('UseSsl: ', BoolToStr(Settings.UseSsl, True));
-  for var user in Settings.Users do
-  begin
-    Writeln('User: ', user.Name);
-    for var role in user.Roles do
-      Writeln('  Role: ', role);
-  end;
-end;
-
 class procedure TFileConfigSample.Run;
 var
   Config: IConfigurationRoot;
@@ -114,7 +114,7 @@ begin
 
   Dump('JSON', Config);
 
-  ConfigBuilder := TConfigurationBuilder.Create;
+//  ConfigBuilder := TConfigurationBuilder.Create;
 
   Config := IniConfig.AddFile(ConfigBuilder, TPath.Combine(SampleFilesPath, 'appsettings.ini')).Build;
 

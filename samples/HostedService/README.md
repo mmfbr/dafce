@@ -1,3 +1,175 @@
+# Ejemplo de Servicio Hospedado en DAF
+
+Este ejemplo demuestra cómo implementar y utilizar servicios hospedados en DAF (Delphi Application Framework), mostrando diferentes patrones de servicios en segundo plano y su ciclo de vida.
+
+## Estructura del Proyecto
+
+El proyecto está organizado en varios archivos que muestran diferentes tipos de servicios hospedados:
+
+- `HostedService.dpr`: Punto de entrada de la aplicación
+- `HostedWorker.pas`: Implementación de servicios hospedados
+- `Files/`: Directorio con archivos de configuración
+- `HostedServiceWithTimer.dpr`: Ejemplo adicional con temporizador
+
+## Tipos de Servicios Hospedados
+
+### 1. Servicio de Ejecución Continua
+```pascal
+TBackgroundWorker = class(TInterfacedObject, IHostedService)
+  // Servicio que se ejecuta continuamente en segundo plano
+  // Implementa un bucle de procesamiento
+end;
+```
+
+### 2. Servicio con Temporizador
+```pascal
+TTimerHostedService = class(TInterfacedObject, IHostedService)
+  // Servicio que se ejecuta en intervalos regulares
+  // Utiliza un temporizador para programar tareas
+end;
+```
+
+## Características Implementadas
+
+### 1. Ciclo de Vida de Servicios
+- Inicialización ordenada
+- Ejecución controlada
+- Finalización graceful
+- Manejo de cancelación
+
+### 2. Patrones de Ejecución
+- Ejecución continua
+- Ejecución programada
+- Ejecución con temporizador
+- Manejo de errores
+
+### 3. Integración con el Host
+- Registro de servicios
+- Control de dependencias
+- Configuración
+- Logging
+
+## Ejemplo de Implementación
+
+```pascal
+// Servicio de ejecución continua
+type
+  TBackgroundWorker = class(TInterfacedObject, IHostedService)
+  private
+    FStopping: Boolean;
+  public
+    function StartAsync: TTask;
+    function StopAsync: TTask;
+  end;
+
+// Servicio con temporizador
+type
+  TTimerHostedService = class(TInterfacedObject, IHostedService)
+  private
+    FTimer: TTimer;
+  public
+    function StartAsync: TTask;
+    function StopAsync: TTask;
+  end;
+```
+
+## Configuración del Host
+
+```pascal
+var Host := THostBuilder.Create
+  .ConfigureServices(
+    procedure(Services: IServiceCollection)
+    begin
+      // Registrar servicios hospedados
+      Services.AddHostedService<TBackgroundWorker>;
+      Services.AddHostedService<TTimerHostedService>;
+      
+      // Registrar dependencias
+      Services.AddSingleton<ILogger, TLogger>;
+    end)
+  .Build;
+```
+
+## Flujo de Ejecución
+
+1. **Inicio del Servicio**:
+   - Inicialización de recursos
+   - Configuración del servicio
+   - Inicio de la ejecución
+
+2. **Ejecución**:
+   - Procesamiento de tareas
+   - Manejo de errores
+   - Registro de eventos
+
+3. **Detención**:
+   - Señal de detención
+   - Finalización de tareas en curso
+   - Liberación de recursos
+
+## Beneficios del Diseño
+
+1. **Confiabilidad**: Manejo robusto de errores y recuperación
+2. **Mantenibilidad**: Separación clara de responsabilidades
+3. **Escalabilidad**: Fácil adición de nuevos servicios
+4. **Testabilidad**: Servicios aislados y verificables
+
+## Ejecución del Ejemplo
+
+1. Compilar y ejecutar la aplicación
+2. Los servicios mostrarán:
+   - Mensajes de inicio/detención
+   - Progreso de ejecución
+   - Eventos y errores
+
+## Consideraciones para Producción
+
+### 1. Manejo de Errores
+- Implementar reintentos
+- Logging detallado
+- Notificaciones de error
+- Recuperación automática
+
+### 2. Monitoreo
+- Health checks
+- Métricas de rendimiento
+- Estado del servicio
+- Uso de recursos
+
+### 3. Configuración
+- Parámetros ajustables
+- Diferentes entornos
+- Secretos y credenciales
+- Timeouts y límites
+
+## Notas Adicionales
+
+- Los servicios pueden ser utilizados en aplicaciones de consola o servicios de Windows
+- Es posible implementar servicios distribuidos
+- Se pueden agregar mecanismos de coordinación entre servicios
+- El diseño permite fácil migración a contenedores
+- Considerar el uso de patrones como Circuit Breaker o Retry
+
+## Mejores Prácticas
+
+1. **Diseño de Servicios**:
+   - Mantener servicios pequeños y enfocados
+   - Implementar interfaces claras
+   - Documentar comportamiento esperado
+   - Considerar concurrencia
+
+2. **Manejo de Recursos**:
+   - Liberar recursos apropiadamente
+   - Implementar timeouts
+   - Manejar conexiones eficientemente
+   - Monitorear uso de memoria
+
+3. **Logging y Diagnóstico**:
+   - Usar niveles de log apropiados
+   - Incluir contexto relevante
+   - Implementar trazas distribuidas
+   - Facilitar debugging
+
 # HostedServiceWithTimer Sample
 
 Este ejemplo muestra cómo implementar un `IHostedService` con un bucle controlado por temporizador usando `TThread` y `TEvent`.

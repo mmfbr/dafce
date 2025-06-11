@@ -26,6 +26,7 @@ var
 begin
   // Crear el diccionario con configuraciones
   Dict := TDictionary<string, string>.Create;
+  // Las claves se componen mediante :
   Dict.Add('App:Title', 'Mi Aplicación Delphi');
   Dict.Add('App:Version', '1.0.0');
 
@@ -33,13 +34,13 @@ begin
   // Crear el builder y agregar la fuente
   var Builder: IConfigurationBuilder := TConfigurationBuilder.Create;
 
-  // Source Onws Dict by default
+  // Dict es poseido, no invocar Free
   MemoryConfig.AddCollection(Builder, Dict);
 
   // Construir la configuración
   Config := Builder.Build;
 
-  // Obtener valores
+  // Leer y Escribir valores (no se altera el origen, solo en memoria)
   Title := Config['App:Title'];
   Writeln('Título: ' + Title);
   Writeln('Versión: ' + Config['App:Version']);

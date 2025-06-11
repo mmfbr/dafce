@@ -23,19 +23,16 @@ begin
   ReportMemoryLeaksOnShutdown := True;
   try
     var Builder := TDafApplication.CreateHostBuilder;
-    Builder.ConfigureAppConfiguration(
-      procedure(Context: IHostBuilderContext; Builder: IConfigurationBuilder)
+    Builder.ConfigureAppConfiguration(procedure(Context: IHostBuilderContext; Builder: IConfigurationBuilder)
       begin
         var Env := Context.Environment;
         var JsonFilePath := TPath.Combine(Env.BinPath, Env.ApplicationName, 'appsettings.json');
         JsonConfig.AddFile(Builder, JsonFilePath);
       end);
 
-    Builder.ConfigureServices(
-      procedure(Context: IHostBuilderContext; Services: IServiceCollection)
+    Builder.ConfigureServices(procedure(Context: IHostBuilderContext; Services: IServiceCollection)
       begin
-        AddLogging(Services,
-          procedure(Builder: ILoggingBuilder)
+        AddLogging(Services, procedure(Builder: ILoggingBuilder)
           begin
             Builder.AddProvider(TNNLogLoader.BuildProvider(Context, 'Logging:NLog'));
           end);
