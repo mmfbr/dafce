@@ -45,6 +45,7 @@ type
     function TryGet(const ServiceType: PTypeInfo; out Service): Boolean;overload;
     function TryGet<ServiceType: IInterface>(out Service): Boolean;overload;
     function CreateScope: IServiceScope;
+    procedure ShutDown;
   end;
 
   TServiceFactory<ServiceType: IInterface> = reference to function(Provider: IServiceProvider): ServiceType;
@@ -324,6 +325,13 @@ end;
 class operator IServiceProvider.NotEqual(S: IServiceProvider; P: Pointer): Boolean;
 begin
   Result := Pointer(S.FImplementor) <> P;
+end;
+
+procedure IServiceProvider.ShutDown;
+begin
+  var Container := GetRequiredService<IServiceScopeFactory> as IContainerAccess;
+  Container.ShutDown;
+  Container._Release;
 end;
 
 { Factory }
