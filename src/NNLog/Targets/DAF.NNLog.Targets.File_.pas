@@ -1,11 +1,11 @@
-﻿unit DAF.NNLog.Targets.File_;
+﻿            unit DAF.NNLog.Targets.File_;
 
 interface
 
 uses
   System.Classes,
   System.DateUtils,
-  Daf.Extensions.Logging,
+  DAF.Extensions.Logging,
   DAF.NNLog,
   DAF.NNLog.Layout;
 
@@ -46,6 +46,7 @@ type
   TRotationStrategyClass = class of TRotationStrategy;
   TRotationStrategy = class
   public
+    class function BuildRotatePath(const Path: string; const FileDate: TDateTime): string;
     class function NeedRotate(const Target: TFileTarget; const Path: string; out RotatedPath: string): Boolean; virtual; abstract;
   end;
 
@@ -62,11 +63,13 @@ uses
 
 type
   TRotationNone = class(TRotationStrategy)
+  private
   public
     class function NeedRotate(const Target: TFileTarget; const Path: string; out RotatedPath: string): Boolean; override;
   end;
 
   TRotationDaily = class(TRotationStrategy)
+  private
   public
     class function NeedRotate(const Target: TFileTarget; const Path: string; out RotatedPath: string): Boolean; override;
   end;
@@ -101,6 +104,16 @@ const
     TRotationSize
   );
 
+{ TRotationStrategy }
+
+class function TRotationStrategy.BuildRotatePath(const Path: string; const FileDate: TDateTime): string;
+begin
+  var Ext := TPath.GetExtension(Path);
+  var Dir := TPath.GetDirectoryName(Path);
+  var FName := TPath.GetFileNameWithoutExtension(Path) + '_' + FormatDateTime('yyyy-mm-dd_hhnnsszzz', Now);
+  Result := TPath.Combine(Dir, FName) + '.' + Ext;
+end;
+
 { TRotationNone }
 
 class function TRotationNone.NeedRotate(const Target: TFileTarget; const Path: string; out RotatedPath: string): Boolean;
@@ -111,13 +124,11 @@ end;
 { TRotationHourly }
 
 class function TRotationHourly.NeedRotate(const Target: TFileTarget; const Path: string; out RotatedPath: string): Boolean;
-var
-  FileDate: TDateTime;
 begin
-  FileDate := TFile.GetCreationTime(Path);
+  var FileDate := TFile.GetCreationTime(Path);
   if (Trunc(FileDate) <> Trunc(Now)) or (HourOf(FileDate) <> HourOf(Now)) then
   begin
-    RotatedPath := Path + '.' + FormatDateTime('yyyymmdd_hh', FileDate);
+    RotatedPath := BuildRotatePath(Path, FileDate);
     Exit(True);
   end;
   Result := False;
@@ -126,13 +137,11 @@ end;
 { TRotationDaily }
 
 class function TRotationDaily.NeedRotate(const Target: TFileTarget; const Path: string; out RotatedPath: string): Boolean;
-var
-  FileDate: TDateTime;
 begin
-  FileDate := TFile.GetCreationTime(Path);
+  var FileDate := TFile.GetCreationTime(Path);
   if Trunc(Now) > Trunc(FileDate) then
   begin
-    RotatedPath := Path + '.' + FormatDateTime('yyyymmdd', FileDate);
+    RotatedPath := BuildRotatePath(Path, FileDate);
     Exit(True);
   end;
   Result := False;
@@ -141,13 +150,11 @@ end;
 { TRotationDays }
 
 class function TRotationDays.NeedRotate(const Target: TFileTarget; const Path: string; out RotatedPath: string): Boolean;
-var
-  FileDate: TDateTime;
 begin
-  FileDate := TFile.GetCreationTime(Path);
+  var FileDate := TFile.GetCreationTime(Path);
   if Trunc(Now - FileDate) >= Target.MaxFileAge then
   begin
-    RotatedPath := Path + '.' + FormatDateTime('yyyymmdd_hhnnss', FileDate);
+    RotatedPath := BuildRotatePath(Path, FileDate);
     Exit(True);
   end;
   Result := False;
@@ -156,13 +163,11 @@ end;
 { TRotationMonthly }
 
 class function TRotationMonthly.NeedRotate(const Target: TFileTarget; const Path: string; out RotatedPath: string): Boolean;
-var
-  FileDate: TDateTime;
 begin
-  FileDate := TFile.GetCreationTime(Path);
+  var FileDate := TFile.GetCreationTime(Path);
   if (MonthOf(FileDate) <> MonthOf(Now)) or (YearOf(FileDate) <> YearOf(Now)) then
   begin
-    RotatedPath := Path + '.' + FormatDateTime('yyyymm', FileDate);
+    RotatedPath := BuildRotatePath(Path, FileDate);
     Exit(True);
   end;
   Result := False;
@@ -172,9 +177,10 @@ end;
 
 class function TRotationSize.NeedRotate(const Target: TFileTarget; const Path: string; out RotatedPath: string): Boolean;
 begin
+  var FileDate := TFile.GetCreationTime(Path);
   if TFile.GetSize(Path) >= Target.MaxFileSize then
   begin
-    RotatedPath := Path + '.' + FormatDateTime('yyyymmdd_hhnnss', Now);
+    RotatedPath := BuildRotatePath(Path, FileDate);
     Exit(True);
   end;
   Result := False;
@@ -309,3 +315,4 @@ begin
 end;
 
 end.
+
