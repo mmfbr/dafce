@@ -121,7 +121,7 @@ end;
 
 class function IniConfig.Source(const AFileName: string; const SourceOptions: TConfigurationSourceOptions): IConfigurationSource;
 begin
-  Result := TIniConfigurationSource.Create(AFileName);
+  Result := TIniConfigurationSource.Create(AFileName, SourceOptions);
 end;
 
 end.
