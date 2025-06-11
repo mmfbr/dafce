@@ -18,3 +18,7 @@ out/
 __history/
 __recovery
 
+
+*.dsk
+
+*.dsv
