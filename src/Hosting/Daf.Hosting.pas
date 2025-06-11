@@ -147,6 +147,7 @@ uses
   System.IOUtils,
   System.SyncObjs,
   System.Types,
+  Daf.Types,
   Daf.DependencyInjection,
   Daf.Configuration.Builder,
   Daf.Configuration.Chained,
@@ -516,29 +517,40 @@ begin
   if (FHostBuilt) then
     raise Exception.Create('IHostBuilder.Build already called');
   FHostBuilt := True;
-  InitializeHostConfiguration;
-  InitializeHostingEnvironment;
-  InitializeHostBuilderContext;
-  InitializeAppConfiguration;
-  InitializeServiceProvider;
+  try
+    try
+      InitializeHostConfiguration;
+      InitializeHostingEnvironment;
+      InitializeHostBuilderContext;
+      InitializeAppConfiguration;
+      InitializeServiceProvider;
 
-  var Host := THost(FAppServices.GetRequiredService<IHost>);
-  Host.SetServiceProvider(FAppServices);
+      var Host := THost(FAppServices.GetRequiredService<IHost>);
+      Host.SetServiceProvider(FAppServices);
 
-  for var HostedService in FAppServices.GetServices<IHostedService> do
-    Host.FHostedServices.Add(HostedService);
+      for var HostedService in FAppServices.GetServices<IHostedService> do
+        Host.FHostedServices.Add(HostedService);
 
-  Result := Host;
+      Result := Host;
 
-  FEnvironment := nil;
-  FHostBuilderContext := nil;
-  FHostConfiguration := nil;
-  FAppConfiguration := nil;
-  FServices := nil;
-  FAppServices := nil;
-  FreeAndNil(FConfigureHostConfigActions);
-  FreeAndNil(FConfigureServicesActions);
-  FreeAndNil(FConfigureAppConfigActions);
+    finally
+      FEnvironment := nil;
+      FHostBuilderContext := nil;
+      FHostConfiguration := nil;
+      FAppConfiguration := nil;
+      FServices := nil;
+      FAppServices := nil;
+      FreeAndNil(FConfigureHostConfigActions);
+      FreeAndNil(FConfigureServicesActions);
+      FreeAndNil(FConfigureAppConfigActions);
+    end;
+  except
+    on E: Exception do
+    begin
+      Debugger.Write('%s [ERROR] %s | %s', [ParamStr(0), ClassName, E.Message]);
+      raise;
+    end;
+  end;
 end;
 
 function THostBuilder.UseProperty(const Key: string; const Value: TValue): IHostBuilder;
