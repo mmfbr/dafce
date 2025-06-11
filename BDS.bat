@@ -2,7 +2,7 @@
 setlocal enableextensions enabledelayedexpansion
 
 set SELF_NAME=%~n0
-set SELF_VS=2.5
+set SELF_VS=2.5.5
 
 set "PRJ_ROOT_KEY=USR_PRJ"
 
@@ -10,31 +10,31 @@ set "PRJ_ROOT_KEY=USR_PRJ"
 set WORK_DIR=%~dp0
 IF %WORK_DIR:~-1%==\ SET WORK_DIR=%WORK_DIR:~0,-1%
 
-:: default IDE Paths
-set "TESTINSIGHT_DIR=%LOCALAPPDATA%\Programs\TestInsight\Source"
-set "DUNITX=%USERPROFILE%\Documents\DUnitX"
-set "DelphiMocks=%USERPROFILE%\Documents\Delphi-Mocks"
 
 :: default PRJ vars
 set "PRJ_DIR=%WORK_DIR%"
-set "VENDOR_BIN=%PRJ_DIR%\vendor\bin"
-set "VENDOR_LIB=%PRJ_DIR%\vendor\lib"
+set "PRJ_VENDOR_DIR=%PRJ_DIR%\vendor"
 set "PRJ_OUT_DIR=%PRJ_DIR%\out"
-
-
-:: adjust dir where IDE offers to save projects by default
-set "BDSPROJECTSDIR=%PRJ_DIR%"
-set "BDSUSERDIR=%PRJ_DIR%"
+for /R "%PRJ_DIR%" %%F in (*.groupproj) do (
+    set "PRJ_BUILD_FILE=%%F"
+    goto :found
+)
+for /R "%PRJ_DIR%" %%F in (*.dproj) do (
+    set "PRJ_BUILD_FILE=%%F"
+    goto :found
+)
+:found
 
 for %%i IN ("%PRJ_DIR%") DO set "PRJ_NAME=%%~ni"
+
+set "PRJ_REG_KEY=%PRJ_ROOT_KEY%\%PRJ_NAME%"
 
 :: load project specific settings so we can override defaults
 call "%WORK_DIR%\project.cmd"
 
-set "PRJ_REG_KEY=%PRJ_ROOT_KEY%\%PRJ_NAME%"
 
 :: add vendor_bin to path, so you can install your vendor pkg
-set PATH=%PATH%;%VENDOR_BIN%
+set PATH=%PATH%;%PRJ_VENDOR_DIR%\bin
 
 :: create output dir
 mkdir "%PRJ_OUT_DIR%" 2>nul
@@ -47,67 +47,77 @@ SET IDE_VER=%IDE_VER:~1%
 :: find delphi registry key
 set "delphi_reg="
 if %IDE_VER% LEQ 7 (
-  set "delphi_reg=Borland\Delphi\%IDE_VER%.0"
+  set "delphi_brand=Borland"
+  set "delphi_brand_base=Delphi"
 ) else (
   if !IDE_VER! LEQ 14 (
     set /A IDE_VER-=6
-    set "delphi_reg=Borland\BDS\!IDE_VER!.0"
+    set "delphi_brand=Borland"
+    set "delphi_brand_base=BDS"
   ) else (
+    set "delphi_brand=Embarcadero"
+    set "delphi_brand_base=BDS"
     if !IDE_VER! LEQ 19 (
       set /A IDE_VER-=7
-      set "delphi_reg=Embarcadero\BDS\!IDE_VER!.0"
     ) else (
       set /A IDE_VER-=6
-      set "delphi_reg=Embarcadero\BDS\!IDE_VER!.0"
     )
   )
 )
+SET "IDE_VER=%IDE_VER%.0"
 
-if (%delphi_reg%)==() goto :ERR_IDE_VS_NOT_FOUND
-
+if (%delphi_brand%)==() goto :ERR_IDE_VS_NOT_FOUND
+set "delphi_reg=HKCU\Software\%delphi_brand%\%delphi_brand_base%\!IDE_VER!"
 :: Get BDS root path & BDS app from Windows Registry
-for /f "tokens=2*" %%a in ('reg query "HKCU\Software\%delphi_reg%" /v "App" 2^>nul') do set "BDSApp=%%~b"
-for /f "tokens=2*" %%a in ('reg query "HKCU\Software\%delphi_reg%" /v "RootDir" 2^>nul') do set "BDS=%%~b"
+for /f "tokens=2*" %%a in ('reg query "%delphi_reg%" /v "App" 2^>nul') do set "BDSApp=%%~b"
+for /f "tokens=2*" %%a in ('reg query "%delphi_reg%" /v "RootDir" 2^>nul') do set "BDS=%%~b"
 set BDS=!BDS:~0,-1!
 
 if ("%BDSApp%")==("") goto :ERR_IDE_VS_NOT_FOUND
+
+set "delphi_reg=HKCU\Software\%delphi_brand%\%PRJ_REG_KEY%\!IDE_VER!"
+set "delphi_brand="
+set "delphi_brand_base="
+
+:: set IDE DefaultProjectsDirectory 
+reg add "%delphi_reg%\Globals" /v "DefaultProjectsDirectory" /t REG_SZ /d "%PRJ_DIR%" /f >nul
 
 call :BANNER
 
 :: select command
 
 if (%1)==(i) (
-call :INSPECT
+call :INSPECT %*
 exit /B 0
 )
 
 if (%1)==(env) (
-call :ENV
+call :ENV %*
 exit /B 0
 ) 
 
 if (%1)==(clean) (
-call :CLEAN
+call :CLEAN %*
 exit /B 0
 ) 
 
 if (%1)==(make) (
-call :MAKE
+call :MAKE %*
 exit /B 0
 ) 
 
 if (%1)==(build) (
-call :BUILD
+call :BUILD %*
 exit /B 0
 ) 
 
 if (%1)==(inno) (
-call :INNO
+call :INNO %*
 exit /B 0
 ) 
 
 :: default command is start ide
-call :START
+call :START %*
 goto :eof
 
 :: Error handling
@@ -125,13 +135,15 @@ echo %SELF_NAME% v%SELF_VS%
 exit /B 0
 
 :INSPECT
-echo    project
-echo ------------
+echo.
+echo    project variables
+echo ---------------------------
 set PRJ_
-set VENDOR
-echo    BDS
-echo ------------
+echo.
+echo    BDS variables
+echo ---------------------------
 SET BDS
+echo delphi_reg=%delphi_reg%
 exit /B 0
 
 :INNO
@@ -146,7 +158,7 @@ if (%2)==() (
 )
 if exist "%BDS%\bin" ( 
   call "%BDS%\bin\rsvars" > nul
-  call msbuild "%PRJ_LOAD%" /t:make /p:Config=%usecfg% /p:Platform=Win32
+  call msbuild "%PRJ_BUILD_FILE%" /t:make /p:Config=%usecfg% /p:Platform=Win32
 )
 exit /B 0
 
@@ -158,7 +170,7 @@ if (%2)==() (
 )
 if exist "%BDS%\bin" ( 
   call "%BDS%\bin\rsvars" > nul
-  call msbuild "%PRJ_LOAD%" /t:Build /p:Config=%usecfg% /p:Platform=Win32
+  call msbuild "%PRJ_BUILD_FILE%" /t:Build /p:Config=%usecfg% /p:Platform=Win32
 )
 exit /B 0
 
@@ -171,13 +183,13 @@ if (%2)==() (
 
 if exist "%BDS%\bin" ( 
   call "%BDS%\bin\rsvars" > nul
-  call msbuild "%PRJ_LOAD%" /t:Clean /p:Config=%usecfg% /p:Platform=Win32
+  call msbuild "%PRJ_BUILD_FILE%" /t:Clean /p:Config=%usecfg% /p:Platform=Win32
 )
 set "usecfg=" 
 exit /B 0
 
 :START
-start "BDS" "%BDSApp%" -idecaption="%PRJ_NAME%" -r"%PRJ_REG_KEY%" "%PRJ_LOAD%" 
+start "BDS" "%BDSApp%" -idecaption="%PRJ_NAME%" -r"%PRJ_REG_KEY%" "%PRJ_BUILD_FILE%" 
 exit /B 0
 
 :ENV
@@ -186,8 +198,14 @@ if (%2)==() (
 ) else (
   set "runmode=%2" 
 )
-echo setup run environment to %runmode%
-robocopy "%PRJ_DIR%\src\runenv\_shared" "%PRJ_OUT_DIR%" /E /NJH /NJS /NFL /NP /NDL
-robocopy "%PRJ_DIR%\src\runenv\%runmode%" "%PRJ_OUT_DIR%" /E /NJH /NJS /NFL /NP /NDL
-set "DAF_APP_ENV=%runmode%"
+set /p CONFIRM=setup env to "%runmode%" in "%PRJ_OUT_DIR%" (y/n)?: 
+if /i "%CONFIRM%"=="y" (
+  rmdir /s /q "%PRJ_OUT_DIR%"
+  robocopy "%PRJ_DIR%\src\runenv\_shared" "%PRJ_OUT_DIR%" /E /NJH /NJS /NFL /NP /NDL
+  robocopy "%PRJ_DIR%\src\runenv\%runmode%" "%PRJ_OUT_DIR%" /E /NJH /NJS /NFL /NP /NDL
+  set "DAF_APP_ENV=%runmode%"
+  echo environment established to %runmode%
+) else (
+  echo canceled
+)
 exit /B 0
