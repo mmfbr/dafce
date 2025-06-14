@@ -66,18 +66,39 @@ if %IDE_VER% LEQ 7 (
 )
 SET "IDE_VER=%IDE_VER%.0"
 
+set "BDS_APP_REG_KEY=App"
+if (%1)==(-64) (
+echo Using 64-bit IDE
+set "use_64_bit=1"
+set "BDS_APP_REG_KEY=App x64"
+shift /1
+)
+
+
 if (%delphi_brand%)==() goto :ERR_IDE_VS_NOT_FOUND
 set "delphi_reg=HKCU\Software\%delphi_brand%\%delphi_brand_base%\!IDE_VER!"
 :: Get BDS root path & BDS app from Windows Registry
-for /f "tokens=2*" %%a in ('reg query "%delphi_reg%" /v "App" 2^>nul') do set "BDSApp=%%~b"
-for /f "tokens=2*" %%a in ('reg query "%delphi_reg%" /v "RootDir" 2^>nul') do set "BDS=%%~b"
+for /f "skip=2 tokens=2,*" %%a in ('reg query "%delphi_reg%" /v "RootDir" 2^>nul') do set "BDS=%%~b"
+
+if (%use_64_bit%)==(1) (
+  for /f "skip=2 tokens=3,*" %%a in ('reg query "%delphi_reg%" /v "%BDS_APP_REG_KEY%" 2^>nul') do set "BDSApp=%%~b"
+) else (
+  for /f "skip=2 tokens=2,*" %%a in ('reg query "%delphi_reg%" /v "%BDS_APP_REG_KEY%" 2^>nul') do set "BDSApp=%%~b"
+)
 set BDS=!BDS:~0,-1!
 
 if ("%BDSApp%")==("") goto :ERR_IDE_VS_NOT_FOUND
-
 set "delphi_reg=HKCU\Software\%delphi_brand%\%PRJ_REG_KEY%\!IDE_VER!"
+if (%use_64_bit%)==(1) (
+  set "BDSbin=%BDS%\bin64"
+) else (
+  set "BDSbin=%BDS%\bin"
+)
+:: clear aux variables
 set "delphi_brand="
 set "delphi_brand_base="
+set "use_64_bit="
+set "BDS_APP_REG_KEY="
 
 :: set IDE DefaultProjectsDirectory 
 reg add "%delphi_reg%\Globals" /v "DefaultProjectsDirectory" /t REG_SZ /d "%PRJ_DIR%" /f >nul
@@ -156,8 +177,8 @@ if (%2)==() (
 ) else (
   set "usecfg=%2" 
 )
-if exist "%BDS%\bin" ( 
-  call "%BDS%\bin\rsvars" > nul
+if exist "%BDSbin%" ( 
+  call "%BDSbin%\rsvars" > nul
   call msbuild "%PRJ_BUILD_FILE%" /t:make /p:Config=%usecfg% /p:Platform=Win32
 )
 exit /B 0
@@ -168,8 +189,8 @@ if (%2)==() (
 ) else (
   set "usecfg=%2" 
 )
-if exist "%BDS%\bin" ( 
-  call "%BDS%\bin\rsvars" > nul
+if exist "%BDSbin%" ( 
+  call "%BDSbin%\rsvars" > nul
   call msbuild "%PRJ_BUILD_FILE%" /t:Build /p:Config=%usecfg% /p:Platform=Win32
 )
 exit /B 0
@@ -181,8 +202,8 @@ if (%2)==() (
   set "usecfg=%2" 
 )
 
-if exist "%BDS%\bin" ( 
-  call "%BDS%\bin\rsvars" > nul
+if exist "%BDSbin%" ( 
+  call "%BDSbin%\rsvars" > nul
   call msbuild "%PRJ_BUILD_FILE%" /t:Clean /p:Config=%usecfg% /p:Platform=Win32
 )
 set "usecfg=" 
