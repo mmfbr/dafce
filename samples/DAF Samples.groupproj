@@ -18,6 +18,9 @@
         <Projects Include="PingProcess\PingProcess.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="CalculatorSpecs\CalculatorSpecs.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -71,14 +74,23 @@
     <Target Name="PingProcess:Make">
         <MSBuild Projects="PingProcess\PingProcess.dproj" Targets="Make"/>
     </Target>
+    <Target Name="CalculatorSpecs">
+        <MSBuild Projects="CalculatorSpecs\CalculatorSpecs.dproj"/>
+    </Target>
+    <Target Name="CalculatorSpecs:Clean">
+        <MSBuild Projects="CalculatorSpecs\CalculatorSpecs.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CalculatorSpecs:Make">
+        <MSBuild Projects="CalculatorSpecs\CalculatorSpecs.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="ConfigExample;MediatRSample;ConsoleSample;HostedService;PingProcess"/>
+        <CallTarget Targets="ConfigExample;MediatRSample;ConsoleSample;HostedService;PingProcess;CalculatorSpecs"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="ConfigExample:Clean;MediatRSample:Clean;ConsoleSample:Clean;HostedService:Clean;PingProcess:Clean"/>
+        <CallTarget Targets="ConfigExample:Clean;MediatRSample:Clean;ConsoleSample:Clean;HostedService:Clean;PingProcess:Clean;CalculatorSpecs:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="ConfigExample:Make;MediatRSample:Make;ConsoleSample:Make;HostedService:Make;PingProcess:Make"/>
+        <CallTarget Targets="ConfigExample:Make;MediatRSample:Make;ConsoleSample:Make;HostedService:Make;PingProcess:Make;CalculatorSpecs:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Debug'">
@@ -90,6 +102,12 @@
         </BuildGroupProject>
         <BuildGroupProject Include="PingProcess\PingProcess.dproj">
             <ProjectGuid>{E8416DF2-5F1D-425B-AFE6-0C3D07085630}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="CalculatorSpecs\CalculatorSpecs.dproj">
+            <ProjectGuid>{E54EA5D8-5ADD-4CFA-8860-8E0FC191E992}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
