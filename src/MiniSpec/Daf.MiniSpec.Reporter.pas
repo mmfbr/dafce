@@ -324,6 +324,7 @@ end;
 
 procedure TCustomReporter.Report(Background: IBackground);
 begin
+  if not Assigned(Background) then Exit;
   DoReport(Background);
   for var Step in BackGround.StepsGiven do
     DoReport(Step);
@@ -428,7 +429,6 @@ end;
 procedure TConsoleReporter.DoReport(const S: ISpecItem);
 begin
   inherited;
-  //if S.Description.IsEmpty then Exit;
   var Kind := GetKeyWord(S.Kind);
   var Level := GetLevel(S.Kind);
   OutputLn(Level, Kind + ' ' +  S.Description, S.RunInfo.IsSuccess, S.RunInfo.ExecTimeMs, S.RunInfo.ErrMsg);
