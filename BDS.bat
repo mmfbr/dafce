@@ -2,10 +2,37 @@
 setlocal enableextensions enabledelayedexpansion
 
 set SELF_NAME=%~n0
-set SELF_VS=2.5.5
+set SELF_VS=3.0.0
+
+:: Análisis de argumentos
+for %%A in (%*) do (
+  set "arg=%%~A"
+  set "firstChar=!arg:~0,1!"
+  rem Primer argumento sin "-" se interpreta como el comando
+  if not defined CMD (
+    if not "!firstChar!"=="-" (
+      set "CMD=!arg!"
+    )
+  ) 
+  rem Argumento tipo --key=value
+  if "!arg:~0,2!"=="--" (
+    set "kvpair=!arg:~2!"
+    for /f "tokens=1,* delims=:" %%K in ("!kvpair!") do (
+      if "%%L"=="" (
+        set "ARG_%%K=true"
+      ) else (
+        set "ARG_%%K=%%L"
+      )
+    )
+  )
+)
+if not defined CMD set "CMD=start"
+
+:: to inspect command line arguments
+:: echo Command: %CMD% Args:
+:: SET ARG_
 
 set "PRJ_ROOT_KEY=USR_PRJ"
-
 :: Current dir without trailing backslash
 set WORK_DIR=%~dp0
 IF %WORK_DIR:~-1%==\ SET WORK_DIR=%WORK_DIR:~0,-1%
@@ -65,11 +92,9 @@ if %IDE_VER% LEQ 7 (
   )
 )
 SET "IDE_VER=%IDE_VER%.0"
-
 set "BDS_APP_REG_KEY=App"
-if (%1)==(-64) (
+if (%ARG_64%)==(true) (
 echo Using 64-bit IDE
-set "use_64_bit=1"
 set "BDS_APP_REG_KEY=App x64"
 shift /1
 )
@@ -80,7 +105,7 @@ set "delphi_reg=HKCU\Software\%delphi_brand%\%delphi_brand_base%\!IDE_VER!"
 :: Get BDS root path & BDS app from Windows Registry
 for /f "skip=2 tokens=2,*" %%a in ('reg query "%delphi_reg%" /v "RootDir" 2^>nul') do set "BDS=%%~b"
 
-if (%use_64_bit%)==(1) (
+if (%ARG_64%)==(true) (
   for /f "skip=2 tokens=3,*" %%a in ('reg query "%delphi_reg%" /v "%BDS_APP_REG_KEY%" 2^>nul') do set "BDSApp=%%~b"
 ) else (
   for /f "skip=2 tokens=2,*" %%a in ('reg query "%delphi_reg%" /v "%BDS_APP_REG_KEY%" 2^>nul') do set "BDSApp=%%~b"
@@ -89,7 +114,7 @@ set BDS=!BDS:~0,-1!
 
 if ("%BDSApp%")==("") goto :ERR_IDE_VS_NOT_FOUND
 set "delphi_reg=HKCU\Software\%delphi_brand%\%PRJ_REG_KEY%\!IDE_VER!"
-if (%use_64_bit%)==(1) (
+if (%ARG_64%)==(true) (
   set "BDSbin=%BDS%\bin64"
 ) else (
   set "BDSbin=%BDS%\bin"
@@ -97,7 +122,7 @@ if (%use_64_bit%)==(1) (
 :: clear aux variables
 set "delphi_brand="
 set "delphi_brand_base="
-set "use_64_bit="
+set "ARG_64="
 set "BDS_APP_REG_KEY="
 
 :: set IDE DefaultProjectsDirectory 
@@ -106,39 +131,8 @@ reg add "%delphi_reg%\Globals" /v "DefaultProjectsDirectory" /t REG_SZ /d "%PRJ_
 call :BANNER
 
 :: select command
-
-if (%1)==(i) (
-call :INSPECT %*
+call :%CMD% %*
 exit /B 0
-)
-
-if (%1)==(env) (
-call :ENV %*
-exit /B 0
-) 
-
-if (%1)==(clean) (
-call :CLEAN %*
-exit /B 0
-) 
-
-if (%1)==(make) (
-call :MAKE %*
-exit /B 0
-) 
-
-if (%1)==(build) (
-call :BUILD %*
-exit /B 0
-) 
-
-if (%1)==(inno) (
-call :INNO %*
-exit /B 0
-) 
-
-:: default command is start ide
-call :START %*
 goto :eof
 
 :: Error handling
@@ -171,42 +165,43 @@ exit /B 0
 iscc /Qp .\AppSetup.iss /DBuildConfig=Release
 exit /B 0
 
-:MAKE
-if (%2)==() (
-  set usecfg=Debug
-) else (
-  set "usecfg=%2" 
-)
+:CLEAN
+if (%ARG_CONFIG%)==() (
+  set "ARG_CONFIG=Debug"
+) 
+if (%ARG_OUTPUT%) neq () (
+  set "PRJ_OUT_DIR=%ARG_OUTPUT%"
+) 
 if exist "%BDSbin%" ( 
   call "%BDSbin%\rsvars" > nul
-  call msbuild "%PRJ_BUILD_FILE%" /t:make /p:Config=%usecfg% /p:Platform=Win32
+  call msbuild "%PRJ_BUILD_FILE%" /t:Clean /p:Config=%ARG_CONFIG% /p:Platform=Win32
+)
+exit /B 0
+
+:MAKE
+if (%ARG_CONFIG%)==() (
+  set "ARG_CONFIG=Debug"
+) 
+if (%ARG_OUTPUT%) neq () (
+  set "PRJ_OUT_DIR=%ARG_OUTPUT%"
+) 
+if exist "%BDSbin%" ( 
+  call "%BDSbin%\rsvars" > nul
+  call msbuild "%PRJ_BUILD_FILE%" /t:make /p:Config=%ARG_CONFIG% /p:Platform=Win32
 )
 exit /B 0
 
 :BUILD
-if (%2)==() (
-  set usecfg=Debug
-) else (
-  set "usecfg=%2" 
-)
+if (%ARG_CONFIG%)==() (
+  set "ARG_CONFIG=Debug"
+) 
+if (%ARG_OUTPUT%) neq () (
+  set "PRJ_OUT_DIR=%ARG_OUTPUT%"
+) 
 if exist "%BDSbin%" ( 
   call "%BDSbin%\rsvars" > nul
-  call msbuild "%PRJ_BUILD_FILE%" /t:Build /p:Config=%usecfg% /p:Platform=Win32
+  call msbuild "%PRJ_BUILD_FILE%" /t:Build /p:Config=%ARG_CONFIG% /p:Platform=Win32
 )
-exit /B 0
-
-:CLEAN
-if (%2)==() (
-  set usecfg=Debug
-) else (
-  set "usecfg=%2" 
-)
-
-if exist "%BDSbin%" ( 
-  call "%BDSbin%\rsvars" > nul
-  call msbuild "%PRJ_BUILD_FILE%" /t:Clean /p:Config=%usecfg% /p:Platform=Win32
-)
-set "usecfg=" 
 exit /B 0
 
 :START
@@ -214,18 +209,17 @@ start "BDS" "%BDSApp%" -idecaption="%PRJ_NAME%" -r"%PRJ_REG_KEY%" "%PRJ_BUILD_FI
 exit /B 0
 
 :ENV
-if (%2)==() (
-  set runmode=deve
-) else (
-  set "runmode=%2" 
-)
-set /p CONFIRM=setup env to "%runmode%" in "%PRJ_OUT_DIR%" (y/n)?: 
+if (%ARG_MODE%)==() (
+  set "ARG_MODE=deve"
+) 
+
+set /p CONFIRM=setup env to "%ARG_MODE%" in "%PRJ_OUT_DIR%" (y/n)?: 
 if /i "%CONFIRM%"=="y" (
   rmdir /s /q "%PRJ_OUT_DIR%"
   robocopy "%PRJ_DIR%\src\runenv\_shared" "%PRJ_OUT_DIR%" /E /NJH /NJS /NFL /NP /NDL
-  robocopy "%PRJ_DIR%\src\runenv\%runmode%" "%PRJ_OUT_DIR%" /E /NJH /NJS /NFL /NP /NDL
-  set "DAF_APP_ENV=%runmode%"
-  echo environment established to %runmode%
+  robocopy "%PRJ_DIR%\src\runenv\%ARG_MODE%" "%PRJ_OUT_DIR%" /E /NJH /NJS /NFL /NP /NDL
+  set "DAF_APP_ENV=%ARG_MODE%"
+  echo environment established to %ARG_MODE%
 ) else (
   echo canceled
 )
