@@ -52,25 +52,27 @@ type
   {$M+}
   TDafApplication = class(TInterfacedObject, IDafApplication)
   strict private
-    FVersionInfo: TVersionInfo;
     FHost: IHost;
     FEnvironment: IHostEnvironment;
     FConfiguration: IConfiguration;
   private
     class var FApp: TDafApplication;
+    class var FVersionInfo: TVersionInfo;
     function GetEnvironment: IHostEnvironment;
     function GetServices: IServiceProvider;
-    function GetVersionInfo: TVersionInfo;
     function GetHost: IHost;
     function GetConfiguration: IConfiguration;
+    function GetVersionInfo: TVersionInfo;
   protected
     class function CreateHostBuilder(BuilderClass: TDafApplicationBuilderClass): TDafApplicationBuilder;overload;
-    function VersionRequested: Boolean;virtual;
     procedure Execute;virtual;
   public
+    class function VersionInfo: TVersionInfo;
+    class function VersionRequested: Boolean;virtual;
     class function CreateHostBuilder: TDafApplicationBuilder;overload;
     class function CreateHostBuilder<T: TDafApplicationBuilder>: T;overload;
     class function App: TDafApplication;inline;
+
     constructor Create(const Host: IHost);virtual;
     procedure Start;
     procedure Stop;
@@ -79,7 +81,6 @@ type
     procedure Run(const Exec: TProc<IServiceProvider>; const WaitForShutdown: Boolean = False);overload;
     //Actually only for syntactic compatibility
     procedure RunAsync(const Exec: TProc<IServiceProvider> = nil; const WaitForShutdown: Boolean = False);
-    property VersionInfo: TVersionInfo read GetVersionInfo;
     property Host: IHost read GetHost;
     property Environment: IHostEnvironment read GetEnvironment;
     property Configuration: IConfiguration read GetConfiguration;
@@ -115,11 +116,26 @@ end;
 
 function TDafApplicationBuilder.Build: IDafApplication;
 begin
-  var Host := inherited Build;
-  Result := FAppClass.Create(Host);
+  Self._AddRef;
+  try
+    var Host := inherited Build;
+    Result := FAppClass.Create(Host);
+  finally
+    Self._Release;;
+  end;
 end;
 
 { TDafApplication }
+
+class function TDafApplication.VersionRequested: Boolean;
+begin
+  Result := (ParamCount > 0) and (ParamStr(1) = '--version');
+end;
+
+class function TDafApplication.VersionInfo: TVersionInfo;
+begin
+  Result := TVersionInfo.GetFrom(Self);
+end;
 
 class function TDafApplication.CreateHostBuilder(BuilderClass: TDafApplicationBuilderClass): TDafApplicationBuilder;
 begin
@@ -140,15 +156,9 @@ constructor TDafApplication.Create(const Host: IHost);
 begin
   FApp := Self;
   inherited Create;
-  FVersionInfo := TVersionInfo.GetFrom(Self.ClassType);
   FHost := Host;
   FEnvironment := Services.GetRequiredService<IHostEnvironment>;
   FConfiguration := Services.GetRequiredService<IConfiguration>;
-end;
-
-function TDafApplication.VersionRequested: Boolean;
-begin
-  Result := (ParamCount > 0) and (ParamStr(1) = '--version');
 end;
 
 procedure TDafApplication.Run(const WaitForShutdown: Boolean = False);
@@ -202,7 +212,7 @@ end;
 
 function TDafApplication.GetVersionInfo: TVersionInfo;
 begin
-  Result := FVersionInfo;
+  Result := VersionInfo;
 end;
 
 class function TDafApplication.App: TDafApplication;
