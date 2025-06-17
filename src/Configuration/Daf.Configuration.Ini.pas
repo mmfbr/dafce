@@ -43,6 +43,8 @@ type
   end;
 
 implementation
+uses
+  Daf.Types;
 
 { TIniConfigurationProvider }
 
@@ -62,8 +64,10 @@ var
 begin
   if not FileExists(FFileName) then
   begin
-    if (csoOptional in FSourceOptions) then Exit;
-    raise Exception.CreateFmt('File "%s" not Found', [FFileName]);
+    if not  (csoOptional in FSourceOptions) then
+      raise Exception.CreateFmt('File "%s" not Found', [FFileName]);
+    Debugger.Write('%s [WARN] %s | File "%s" not Found', [ParamStr(0), ClassName, FFileName]);
+    Exit;
   end;
 
   Data.Clear;
@@ -93,6 +97,7 @@ begin
     Sections.Free;
     Keys.Free;
   end;
+  Debugger.Write('%s [INFO] %s | Configuration "%s" loaded', [ParamStr(0), ClassName, FFileName]);
   OnReload;
 end;
 

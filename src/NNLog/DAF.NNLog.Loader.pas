@@ -92,8 +92,30 @@ begin
   Result.IsFinal := RuleCfg.IsFinal;
 end;
 
+procedure Dump(Title: string; const Config: IConfiguration; const Indent: string = '');
+begin
+  if not Title.IsEmpty then
+  begin
+    WriteLn('-----------------');
+    WriteLn(Title);
+    WriteLn('-----------------');
+  end;
+
+  for var section in Config.GetChildren do
+  begin
+    if Section.HasChildren then
+    begin
+      Writeln(Indent + section.Key + ':');
+      Dump('', section, Indent + '  ');
+    end
+    else
+      Writeln(Indent + section.Key + ' = ' + section.Value);
+  end;
+end;
+
 class function TNNLogLoader.Load(const Config: IConfiguration): TNNLogConfiguration;
 begin
+//  Dump('NNlog config', Config);
   Result := TConfigurationBinder.Bind<TNNLogConfiguration>(Config, '', boFields);
 end;
 
