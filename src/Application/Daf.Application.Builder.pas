@@ -57,7 +57,6 @@ type
     FConfiguration: IConfiguration;
   private
     class var FApp: TDafApplication;
-    class var FVersionInfo: TVersionInfo;
     function GetEnvironment: IHostEnvironment;
     function GetServices: IServiceProvider;
     function GetHost: IHost;
