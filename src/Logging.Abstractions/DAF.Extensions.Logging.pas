@@ -203,6 +203,13 @@ type
     function CreateLogger(const AType: PTypeInfo): ILogger; overload;
   end;
 
+  TNullLoggerFactory = class(TInterfacedObject, ILoggerFactory)
+  public
+    function CreateLogger(const Category: string): ILogger; overload;
+    function CreateLogger(const AClass: TClass): ILogger; overload;
+    function CreateLogger(const AType: PTypeInfo): ILogger; overload;
+  end;
+
   TNullLogger = class(TInterfacedObject, ILogger)
   private
   public
@@ -384,6 +391,23 @@ begin
     FMessage := FMessage + Scope;
   end;
   Result := FMessage;
+end;
+
+{ TNullLoggerFactory }
+
+function TNullLoggerFactory.CreateLogger(const Category: string): ILogger;
+begin
+  Result := TNullLogger.Create;
+end;
+
+function TNullLoggerFactory.CreateLogger(const AClass: TClass): ILogger;
+begin
+  Result := CreateLogger(AClass.ClassInfo);
+end;
+
+function TNullLoggerFactory.CreateLogger(const AType: PTypeInfo): ILogger;
+begin
+  Result := CreateLogger(AType.TypeData.UnitNameFld.ToString + '.' + AType.NameFld.ToString);
 end;
 
 { TNullLogger }
