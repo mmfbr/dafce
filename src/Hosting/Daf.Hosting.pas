@@ -153,6 +153,8 @@ uses
   Daf.Configuration.Chained,
   Daf.Configuration.Memory;
 
+
+{$IFOPT D+}
 { TSingleton<T> }
 procedure TSingleton<T>.AfterConstruction;
 begin
@@ -166,6 +168,7 @@ begin
   FInstance := nil;
   inherited;
 end;
+{$ENDIF}
 
 { THostEnvironment }
 
