@@ -29,7 +29,7 @@ type
   end;
 
 type
-{$REGION 'from unit RTTI implem;'}
+{$REGION 'from unit System.Rtti implem;'}
   PPVtable = ^PVtable;
   PVtable = ^TVtable;
   TVtable = array [0 .. MaxInt div SizeOf(Pointer) - 1] of Pointer;
@@ -38,23 +38,25 @@ type
   TDescriptorsDictionary = TObjectDictionary<PTypeInfo, TServiceDescriptors>;
   TServiceScope = class;
 
-  // Es un singleton. Contiene la lista de todos los Scopes creados. El primer Scope creado, es
-  // el Scope que contiene los sercvicios con lifetime Singleton
+  // Es un singleton. Contiene la lista de todos los Scopes creados asi como
+  // el scope para singletons
   TServiceScopeFactory = class(TDIObject<TServiceScopeFactory>, IServiceScopeFactory, IContainerAccess)
   strict private
-    FServiceCollection: IServiceCollectionImpl;
-
+    FServiceCollection: IServiceCollection;
     FSingletonScope: IServiceScope;
     FShutDonwnDone: Boolean;
     FScopes: TList<IServiceScope>;
     function GetSingletonsScope: IServiceScope;
+  private
+    procedure AddToSingletonScope;
+    procedure RemoveFromSingletonScope;
   protected
     procedure Shutdown;
   public
     constructor Create(const ServiceCollection: IServiceCollection);
     destructor Destroy;override;
     function CreateScope: IServiceScope;
-    property ServiceCollection: IServiceCollectionImpl read FServiceCollection;
+    property ServiceCollection: IServiceCollection read FServiceCollection;
     property SingletonsScope: IServiceScope read GetSingletonsScope;
   end;
 
@@ -73,6 +75,7 @@ type
     FServiceInstances : TOrderedDictionary<string, IInterface>;
     FCreatingSingletons: TStack<TServiceDescriptor>;
     FIsSingletonsScope: Boolean;
+    FShutDonwnDone: Boolean;
     function GetServiceIdentity(Descriptor: TServiceDescriptor): TServiceIdentity;
     function CreateInstance(const Descriptor: TServiceDescriptor; const Provider: IServiceProvider): IInterface;
     function GetOrCreate(const Descriptor: TServiceDescriptor; const Provider: IServiceProvider): IInterface;overload;
@@ -128,6 +131,7 @@ implementation
 
 uses
   System.SysUtils,
+  Daf.Types,
   Daf.Rtti;
 
 { TDIObject }
@@ -244,15 +248,10 @@ constructor TServiceScopeFactory.Create(const ServiceCollection: IServiceCollect
 begin
   inherited Create;
   FServiceCollection := ServiceCollection;
-  FScopes := TList<IServiceScope>.Create;
-
-  // note is not in FScopes
+  // Note FSingletonScope is not in FScopes !!
   FSingletonScope := TServiceScope.Create(Self, True);
-
-  ServiceCollection.AddSingleton<IServiceScopeFactory>(Self);
-
-  //Forzamos que se Self se referencie como Singleton;
-  FSingletonScope.ServiceProvider.GetRequiredService<IServiceScopeFactory>;
+  FScopes := TList<IServiceScope>.Create;
+  AddToSingletonScope;
 end;
 
 destructor TServiceScopeFactory.Destroy;
@@ -261,23 +260,39 @@ begin
   inherited;
 end;
 
+procedure TServiceScopeFactory.AddToSingletonScope;
+begin
+  // Force Self avaliable as Singleton
+  ServiceCollection.AddSingleton<IServiceScopeFactory>(Self);
+  FSingletonScope.ServiceProvider.GetRequiredService<IServiceScopeFactory>;
+end;
+
+procedure TServiceScopeFactory.RemoveFromSingletonScope;
+begin
+  with TServiceScope(FSingletonScope).FServiceInstances do
+    Delete(0);
+end;
+
 procedure TServiceScopeFactory.Shutdown;
 begin
   if FShutDonwnDone then Exit;
   FShutDonwnDone := True;
   _AddRef;
-
+  try
+    RemoveFromSingletonScope;
   var Scopes := FScopes.ToArray;
   FSCopes.Clear;
-
   for var idx := High(Scopes) to Low(Scopes) do
+    begin
        TServiceScope(Scopes[idx]).Shutdown;
-  for var idx := High(Scopes) downto Low(Scopes) do
     Scopes[idx] := nil;
-
+    end;
   TServiceScope(FSingletonScope).Shutdown;
-  FServiceCollection := nil;
   FSingletonScope := nil;
+    FServiceCollection := nil;
+  finally
+    _Release;
+  end;
 end;
 
 function TServiceScopeFactory.CreateScope: IServiceScope;
@@ -306,9 +321,9 @@ end;
 destructor TServiceScope.Destroy;
 begin
   // Just in case this Scope is temporal, and we not are in Shutdown
-  CollectGarbage;
-  FServiceInstances.Free;
-  FCreatingSingletons.Free;
+  Shutdown;
+  FreeAndNil(FServiceInstances);
+  FreeAndNil(FCreatingSingletons);
   inherited;
 end;
 
@@ -329,6 +344,7 @@ function TServiceScope.CreateInstance(const Descriptor: TServiceDescriptor; cons
 begin
   var
   Intf := Descriptor.Factory(Provider);
+
   if not Supports(Intf, Descriptor.TypeInfo.TypeData.GUID, Result) then
     raise Exception.CreateFmt('% don''t implements %s', [TObject(Intf).QualifiedClassName, Descriptor.ServiceName]);
 end;
@@ -345,48 +361,32 @@ begin
 end;
 
 procedure TServiceScope.CollectGarbage;
-type
-  POBject = ^TObject;
 begin
-
-  var Services := FServiceInstances.Values.ToArray;
-  FServiceInstances.Clear;
-
-  // Los servicios se crean en orden de dependencia
-  // preparamos para destruccion haciendo que
-  // cada servicio deje de referenciar a otros:
-  var RCtx := TRttiContext.Create;
-  try
-    for var idx := High(Services) downto 1 + Low(Services) do
+  var UnusedFound: Boolean;
+  repeat
+    UnusedFound := False;
+    for var idx := FServiceInstances.Count - 1 downto 0 do
     begin
-      var Implementor := Services[idx] as TObject;
-      if Implementor = FScopeFactory then Continue;
-
-      var RImpl := RCtx.GetType(Implementor.ClassInfo);
-      var Fields := RImpl.GetFields;
-      for var Field in Fields do
+      // there are an implicit call to _AddRef in ValueList access
+      var RefCount := FServiceInstances.ValueList[idx]._Release;
+      if (RefCount = 1) then
+      // it is only referenced by FServiceInstances, so it will be released
+      // and that will reduce the RefCount of other services in this
+      // scope
       begin
-        if not Field.FieldType.IsInterface then Continue;
-        var ObjRef := Field.GetValue(Implementor).AsInterface as TObject;
-        if ObjRef = nil then Continue;
-        if not (ObjRef is TInterfacedObject) then Continue;
-        if TInterfacedObject(ObjRef).RefCount <= 0 then
-          PObject(PByte(Implementor) + Field.Offset)^ := nil
-        else
-          Field.SetValue(Implementor, nil);
+        FServiceInstances.Delete(idx);
+        UnusedFound := True;
+        Break
       end;
     end;
-
-    for var idx := High(Services) downto Low(Services) do
-      Services[idx] := nil;
-
-  finally
-    RCtx.Free;
-  end;
+  until not UnusedFound;
+  FServiceInstances.Clear;
 end;
 
 procedure TServiceScope.Shutdown;
 begin
+  if FShutDonwnDone then Exit;
+  FShutDonwnDone := True;
   CollectGarbage;
 end;
 
