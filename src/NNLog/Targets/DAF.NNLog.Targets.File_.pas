@@ -24,11 +24,11 @@ type
     FCompressOnRotate: Boolean;
     FAutoFlush: Boolean;
     procedure EnsureStreamFor(const Path: string);
-    procedure RotateCurrentFileIfNeeded;
     function ResolveFileName(const Entry: TLogEntry): string;
     procedure SetFileName(const Value: string);
     procedure CleanupHistory(const HistoryDir: string);
-    procedure MoveToHistory(const RotatedPath: string);
+    procedure MoveToHistory(const Path, RotatedPath: string);
+    function RotateCurrentFileIfNeeded(const Path: string): Boolean;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -200,9 +200,18 @@ begin
   inherited;
 end;
 
+procedure TFileTarget.Write(const Entry: TLogEntry);
+begin
+  var Path := ResolveFileName(Entry);
+  EnsureStreamFor(Path);
+  var Line := RenderEvent(Entry);
+  FStream.WriteLine(Line);
+end;
+
 procedure TFileTarget.EnsureStreamFor(const Path: string);
 begin
-  RotateCurrentFileIfNeeded;
+  if  RotateCurrentFileIfNeeded(Path) then
+    FCurrentPath := ''; // we  need a new stream
 
   if (FCurrentPath = Path) then Exit;
   var FileStream: TFileStream := nil;
@@ -229,26 +238,27 @@ begin
   end;
 end;
 
-procedure TFileTarget.RotateCurrentFileIfNeeded;
+function TFileTarget.RotateCurrentFileIfNeeded(const Path: string): Boolean;
 var
   RotatedPath: string;
 begin
-  if not TFile.Exists(FCurrentPath) then
+  Result := False;
+  if not TFile.Exists(Path) then
     Exit;
 
-  if not StrategyOf[RotationPolicy].NeedRotate(Self, FCurrentPath, RotatedPath) then Exit;
+  if not StrategyOf[RotationPolicy].NeedRotate(Self, Path, RotatedPath) then Exit;
+  Result := True;
   // Ajustar ruta de histórico
-  var HistoryDir := TPath.Combine(TPath.GetDirectoryName(RotatedPath), 'history');
+  var HistoryDir := TPath.Combine(TPath.GetDirectoryName(Path), 'history');
   ForceDirectories(HistoryDir);
   RotatedPath := TPath.Combine(HistoryDir, TPath.GetFileName(RotatedPath));
-  MoveToHistory(RotatedPath);
+  MoveToHistory(Path, RotatedPath);
 end;
 
-procedure TFileTarget.MoveToHistory(const RotatedPath: string);
+procedure TFileTarget.MoveToHistory(const Path: string; const RotatedPath: string);
 begin
   FreeAndNil(FStream);
-  TFile.Move(FCurrentPath, RotatedPath);
-  FCurrentPath := '';
+  TFile.Move(Path, RotatedPath);
   if CompressOnRotate then
   begin
     var Zip := TZipFile.Create;
@@ -304,14 +314,6 @@ end;
 function TFileTarget.ResolveFileName(const Entry: TLogEntry): string;
 begin
   Result := TLogLayoutEngine.ResolveLayout(FileName, Entry).Replace('/', PathDelim);
-end;
-
-procedure TFileTarget.Write(const Entry: TLogEntry);
-begin
-  var Path := ResolveFileName(Entry);
-  EnsureStreamFor(Path);
-  var Line := RenderEvent(Entry);
-  FStream.WriteLine(Line);
 end;
 
 end.

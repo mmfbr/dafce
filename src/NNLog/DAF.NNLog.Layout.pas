@@ -81,28 +81,35 @@ end;
 
 class procedure TLogLayoutEngine.RegisterLayoutRenderers(const Environment: IHostEnvironment);
 begin
+
+  // local copy of variables to no reference Envrinoment inside renderers
+  var EnvironmentName := Environment.EnvironmentName;
+  var ContentRootPath := Environment.ContentRootPath;
+  var ApplicationName := Environment.ApplicationName;
+  var BinPath := Environment.BinPath;
+
   TLogLayoutEngine.RegisterRenderer('environment',
     function(const Arg: string; const Entry: TLogEntry): string
     begin
-      Result := Environment.EnvironmentName;
+      Result := EnvironmentName;
     end);
 
   TLogLayoutEngine.RegisterRenderer('contentRootPath',
     function(const Arg: string; const Entry: TLogEntry): string
     begin
-      Result := Environment.ContentRootPath;
+      Result := ContentRootPath;
     end);
 
   TLogLayoutEngine.RegisterRenderer('ApplicationName',
     function(const Arg: string; const Entry: TLogEntry): string
     begin
-      Result := Environment.ApplicationName;
+      Result := ApplicationName;
     end);
 
   TLogLayoutEngine.RegisterRenderer('binPath',
     function(const Arg: string; const Entry: TLogEntry): string
     begin
-      Result := Environment.BinPath;
+      Result := BinPath;
     end);
   TLogLayoutEngine.RegisterRenderer('exception',
     function(const Arg: string; const Entry: TLogEntry): string
