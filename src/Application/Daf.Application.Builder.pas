@@ -66,7 +66,7 @@ type
     class function CreateHostBuilder(BuilderClass: TDafApplicationBuilderClass): TDafApplicationBuilder;overload;
     procedure Execute;virtual;
   public
-    class function VersionInfo: TVersionInfo;
+    class function VersionInfo: TVersionInfo;virtual;
     class function VersionRequested: Boolean;virtual;
     class function CreateHostBuilder: TDafApplicationBuilder;overload;
     class function CreateHostBuilder<T: TDafApplicationBuilder>: T;overload;

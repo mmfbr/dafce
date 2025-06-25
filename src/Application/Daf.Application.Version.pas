@@ -37,7 +37,7 @@ type
     property Metadata: string read FMetadata;
     property ArchBits: Integer read FArchBits;
     property Platform: string read FPlatform;
-    property Debug: Boolean read FDebug;
+    property Debug: Boolean read FDebug write FDebug;
   end;
 
   VersionAttribute = class(TCustomAttribute)
@@ -176,7 +176,7 @@ begin
   if not FMetadata.IsEmpty then
     Result := Result + '+' + FMetadata;
 
-  var CompiledMeta := Format('%s%d%s', [CompiledPlatform, CompiledArchBits, IfThen(CompiledDebug, 'DBG', '')]);
+  var CompiledMeta := Format('%s%d%s', [Self.Platform, ArchBits, IfThen(Self.Debug, '.Dbg', '')]);
   if WithCompiledMeta and not CompiledMeta.IsEmpty then
     Result := Result + '+' + CompiledMeta;
 end;
