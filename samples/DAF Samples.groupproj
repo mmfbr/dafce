@@ -21,6 +21,9 @@
         <Projects Include="CalculatorSpecs\CalculatorSpecs.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="MastermindSpecs\MasterMind.Specs.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -83,14 +86,23 @@
     <Target Name="CalculatorSpecs:Make">
         <MSBuild Projects="CalculatorSpecs\CalculatorSpecs.dproj" Targets="Make"/>
     </Target>
+    <Target Name="MasterMind_Specs">
+        <MSBuild Projects="MastermindSpecs\MasterMind.Specs.dproj"/>
+    </Target>
+    <Target Name="MasterMind_Specs:Clean">
+        <MSBuild Projects="MastermindSpecs\MasterMind.Specs.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="MasterMind_Specs:Make">
+        <MSBuild Projects="MastermindSpecs\MasterMind.Specs.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="ConfigExample;MediatRSample;ConsoleSample;HostedService;PingProcess;CalculatorSpecs"/>
+        <CallTarget Targets="ConfigExample;MediatRSample;ConsoleSample;HostedService;PingProcess;CalculatorSpecs;MasterMind_Specs"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="ConfigExample:Clean;MediatRSample:Clean;ConsoleSample:Clean;HostedService:Clean;PingProcess:Clean;CalculatorSpecs:Clean"/>
+        <CallTarget Targets="ConfigExample:Clean;MediatRSample:Clean;ConsoleSample:Clean;HostedService:Clean;PingProcess:Clean;CalculatorSpecs:Clean;MasterMind_Specs:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="ConfigExample:Make;MediatRSample:Make;ConsoleSample:Make;HostedService:Make;PingProcess:Make;CalculatorSpecs:Make"/>
+        <CallTarget Targets="ConfigExample:Make;MediatRSample:Make;ConsoleSample:Make;HostedService:Make;PingProcess:Make;CalculatorSpecs:Make;MasterMind_Specs:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Debug'">
@@ -108,6 +120,12 @@
         </BuildGroupProject>
         <BuildGroupProject Include="CalculatorSpecs\CalculatorSpecs.dproj">
             <ProjectGuid>{E54EA5D8-5ADD-4CFA-8860-8E0FC191E992}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="MastermindSpecs\MasterMind.Specs.dproj">
+            <ProjectGuid>{039B3194-21B0-416C-AF5E-93119EFF88E4}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
