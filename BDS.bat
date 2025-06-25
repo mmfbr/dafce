@@ -2,7 +2,7 @@
 setlocal enableextensions enabledelayedexpansion
 
 set SELF_NAME=%~n0
-set SELF_VS=3.0.0
+set SELF_VS=3.1.0
 
 :: Análisis de argumentos
 for %%A in (%*) do (
@@ -116,13 +116,14 @@ if ("%BDSApp%")==("") goto :ERR_IDE_VS_NOT_FOUND
 set "delphi_reg=HKCU\Software\%delphi_brand%\%PRJ_REG_KEY%\!IDE_VER!"
 if (%ARG_64%)==(true) (
   set "BDSbin=%BDS%\bin64"
+  set "rsvars=%BDS%\bin64\rsvars64"
 ) else (
   set "BDSbin=%BDS%\bin"
+  set "rsvars=%BDS%\bin\\rsvars"
 )
 :: clear aux variables
 set "delphi_brand="
 set "delphi_brand_base="
-set "ARG_64="
 set "BDS_APP_REG_KEY="
 
 :: set IDE DefaultProjectsDirectory 
@@ -173,8 +174,8 @@ if (%ARG_OUTPUT%) neq () (
   set "PRJ_OUT_DIR=%ARG_OUTPUT%"
 ) 
 if exist "%BDSbin%" ( 
-  call "%BDSbin%\rsvars" > nul
-  call msbuild "%PRJ_BUILD_FILE%" /t:Clean /p:Config=%ARG_CONFIG% /p:Platform=Win32
+  call "%rsvars%" > nul
+  call msbuild "%PRJ_BUILD_FILE%" /t:Clean /verbosity:quiet /p:Config=%ARG_CONFIG% /p:Platform=Win32
 )
 exit /B 0
 
@@ -186,8 +187,8 @@ if (%ARG_OUTPUT%) neq () (
   set "PRJ_OUT_DIR=%ARG_OUTPUT%"
 ) 
 if exist "%BDSbin%" ( 
-  call "%BDSbin%\rsvars" > nul
-  call msbuild "%PRJ_BUILD_FILE%" /t:make /p:Config=%ARG_CONFIG% /p:Platform=Win32
+  call "%rsvars%" > nul
+  call msbuild "%PRJ_BUILD_FILE%" /t:make /verbosity:quiet /p:Config=%ARG_CONFIG% /p:Platform=Win32
 )
 exit /B 0
 
@@ -195,12 +196,18 @@ exit /B 0
 if (%ARG_CONFIG%)==() (
   set "ARG_CONFIG=Debug"
 ) 
+if (%ARG_64%)==(true) (
+  set "ARG_PLATFORM=Win64"
+) else  (
+  set "ARG_PLATFORM=Win32"
+)
+
 if (%ARG_OUTPUT%) neq () (
   set "PRJ_OUT_DIR=%ARG_OUTPUT%"
 ) 
 if exist "%BDSbin%" ( 
-  call "%BDSbin%\rsvars" > nul
-  call msbuild "%PRJ_BUILD_FILE%" /t:Build /p:Config=%ARG_CONFIG% /p:Platform=Win32
+  call "%rsvars%" > nul
+  call msbuild "%PRJ_BUILD_FILE%" /t:Build /verbosity:quiet /p:Platform=%ARG_PLATFORM% /p:Config=%ARG_CONFIG% 
 )
 exit /B 0
 
