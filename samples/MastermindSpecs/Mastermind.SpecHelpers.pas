@@ -6,7 +6,7 @@ uses
   Mastermind.Game;
 
 type
-  TGameContext = class
+  TGameWorld = class
   public
     Game: TMasterMind;
     Codigo: TMasterMindCode;
@@ -17,8 +17,8 @@ type
     destructor Destroy;override;
   end;
 
-// convierte a TValue para poder usarlo en los Examples
-function V(const Params: TMasterMindCode): TValue;
+// convierte a TValue para poder usarlo en Examples
+function v(const Params: TMasterMindCode): TValue;
 implementation
 
 function V(const Params: TMasterMindCode): TValue;
@@ -26,9 +26,9 @@ begin
   Result := TValue.From(Params);
 end;
 
-{ TGameContext }
+{ TGameWorld }
 
-destructor TGameContext.Destroy;
+destructor TGameWorld.Destroy;
 begin
   Game.Free;
   inherited

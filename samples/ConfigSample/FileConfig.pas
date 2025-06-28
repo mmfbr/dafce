@@ -114,6 +114,7 @@ begin
 
   Dump('JSON', Config);
 
+// Si no creamos un nuevo builder, las nuevas claves que leamos se suman a las anteriores, o las sobreescriben si exsiten
 //  ConfigBuilder := TConfigurationBuilder.Create;
 
   Config := IniConfig.AddFile(ConfigBuilder, TPath.Combine(SampleFilesPath, 'appsettings.ini')).Build;

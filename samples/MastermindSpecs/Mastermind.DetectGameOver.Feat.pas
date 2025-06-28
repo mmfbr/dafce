@@ -8,7 +8,6 @@ uses
   Mastermind.Game,
   Mastermind.SpecHelpers;
 
-  // Reorganizamos un poco el codigo para reusar el contexto entre features.
 implementation
 
 initialization
@@ -22,19 +21,19 @@ initialization
     @game-state
   ''')
 
-  .UseWorld<TGameContext>
+  .UseWorld<TGameWorld>
   .ScenarioOutline('Detectar partida terminda')
-    .Given('el código secreto es <Codigo>', procedure(Ctx: TGameContext)
+    .Given('el código secreto es <Codigo>', procedure(W: TGameWorld)
       begin
-        Ctx.Game := TMastermind.Create(Ctx.Codigo);
+        W.Game := TMastermind.Create(W.Codigo);
       end)
-    .When('realizo la jugada <Jugada>', procedure(Ctx: TGameContext)
+    .When('realizo la jugada <Jugada>', procedure(W: TGameWorld)
       begin
-        Ctx.Game.Guess := Ctx.Jugada;
+        W.Game.Guess := W.Jugada;
       end)
-    .&Then('el juego indica si ha terminado la partida', procedure(Ctx: TGameContext)
+    .&Then('el juego indica si ha terminado la partida', procedure(W: TGameWorld)
       begin
-        Expect(Ctx.Game.GameOver).ToEqual(Ctx.GameOver);
+        Expect(W.Game.GameOver).ToEqual(W.GameOver);
       end)
       .Examples([
       ['Codigo',     'Jugada',   'GameOver'],

@@ -31,6 +31,8 @@ type
     function Alive: Boolean;
   end;
 
+  // En el contenedor solo podemos registrar interfaces (por ahora).
+  // Pero podemos solicitar record que se conviertan desde una interface registrada
   IWrapper = record
   private
     FImpl: IWrapperImpl;
@@ -42,11 +44,14 @@ type
     function Alive: Boolean;inline;
   end;
 
+
+  // Esta clase se instancia mediante inyeccion de depedencias
+  // para ilustrar que el contenedor resuelve correctamente su constructor
+  // el cual solicita un record con operador de conversion con un servicio
   TWrapperAccessor = class
   private
     FWrapper: IWrapper;
   public
-    // Como alternativa se puede requerir directamente IConfiguration
     constructor Create(Wrapper: IWrapper);
     function ChecWrapperAccess: Boolean;
     property Wrapper: IWrapper read FWrapper;

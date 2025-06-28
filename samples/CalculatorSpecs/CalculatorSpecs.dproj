@@ -100,10 +100,10 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Calculator.Add.Feature.pas"/>
+        <DCCReference Include="Calculator.Add.Feat.pas"/>
         <DCCReference Include="Calculator.Engine.pas"/>
         <DCCReference Include="Calculator.SpecHelpers.pas"/>
-        <DCCReference Include="Calculator.Mult.Feature.pas"/>
+        <DCCReference Include="Calculator.Mult.Feat.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
             <DependentOn>..\samples.optset</DependentOn>

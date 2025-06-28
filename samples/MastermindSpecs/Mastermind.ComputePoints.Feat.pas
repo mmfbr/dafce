@@ -19,24 +19,24 @@ initialization
     Para poder mejorar mi próxima jugada
   ''')
 
-  .UseWorld<TGameContext>
+  .UseWorld<TGameWorld>
   .ScenarioOutline('Obtener puntuacion completa')
-    .Given('el código secreto es <Codigo>', procedure(Ctx: TGameContext)
+    .Given('el código secreto es <Codigo>', procedure(W: TGameWorld)
       begin
-        Ctx.Game := TMastermind.Create(Ctx.Codigo);
+        W.Game := TMastermind.Create(W.Codigo);
       end)
-    .When('realizo la jugada <Jugada>', procedure(Ctx: TGameContext)
+    .When('realizo la jugada <Jugada>', procedure(W: TGameWorld)
       begin
-        Ctx.Game.Guess := Ctx.Jugada;
+        W.Game.Guess := W.Jugada;
       end)
-    .&Then('El juego indica <correctos> correctos', procedure(Ctx: TGameContext)
+    .&Then('El juego indica <correctos> correctos', procedure(W: TGameWorld)
       begin
-        Expect(Ctx.Game.Corrects).ToEqual(Ctx.correctos);
-        Expect(Ctx.Game.Misplaceds).ToEqual(Ctx.desplazados);
+        Expect(W.Game.Corrects).ToEqual(W.correctos);
+        Expect(W.Game.Misplaceds).ToEqual(W.desplazados);
       end)
-    .&Then('y <desplazados> desplazados ', procedure(Ctx: TGameContext)
+    .&And('<desplazados> desplazados ', procedure(W: TGameWorld)
       begin
-        Expect(Ctx.Game.Misplaceds).ToEqual(Ctx.desplazados);
+        Expect(W.Game.Misplaceds).ToEqual(W.desplazados);
       end)
     .Examples([
       [   'Codigo',   'Jugada',  'Correctos', 'Desplazados'],

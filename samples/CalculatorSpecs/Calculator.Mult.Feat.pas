@@ -1,4 +1,4 @@
-﻿unit Calculator.Mult.Feature;
+﻿unit Calculator.Mult.Feat;
 
 interface
 
@@ -20,21 +20,21 @@ initialization
   ''')
   .UseWorld<TCalculatorWorld>
   .Background
-    .Given('I have a Calculator', procedure(World: TCalculatorWorld)
+    .Given('I have a Calculator', procedure(W: TCalculatorWorld)
     begin
-      World.Calculator := TCalculator.Create;
+      W.Calculator := TCalculator.Create;
     end)
 
   .ScenarioOutline('<A> * <B> should be <Result>')
   .Given('the numbers <A> and <B>')
-  .When('they are multiplied', procedure(World: TCalculatorWorld)
+  .When('they are multiplied', procedure(W: TCalculatorWorld)
     begin
-      with World do
+      with W do
         Calculator.Mult(A, B);
     end)
-  .&Then('the result is <Result>', procedure(World: TCalculatorWorld)
+  .&Then('the result is <Result>', procedure(W: TCalculatorWorld)
     begin
-      with World do
+      with W do
         Expect(Calculator.Result).ToEqual(Result);
     end)
   .Examples(
