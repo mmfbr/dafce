@@ -44,7 +44,6 @@ begin
     procedure
     begin
       FLogger.LogWarning('🚪 El host se está apagando, THostedWorker preparando su salida...');
-      sleep(100);
     end);
 end;
 
@@ -62,7 +61,7 @@ begin
         procedure
         begin
           FLogger.LogInformation('I''m working at [%s] ...', [FormatDateTime('hh:nn:ss', Now)]);
-          case Random(12) of
+          case Random(20) of
             0: raise Exception.Create('Simulated Error in ' + ClassName);
           end;
         end);
@@ -95,13 +94,11 @@ end;
 procedure THostedWorker.Stop;
 begin
   FLogger.LogInformation('🔴 THostedWorker.Stop called');
-  sleep(3000);
 
   if Assigned(FTask) and not(FTask.Status in [TTaskStatus.Completed, TTaskStatus.Canceled, TTaskStatus.Exception]) then
   begin
     try
       FLogger.LogInformation('✅ Esperando terminación del servicio');
-      sleep(1000);
       FTask.Wait;
     except
       on E: Exception do

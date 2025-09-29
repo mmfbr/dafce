@@ -5,7 +5,6 @@
 uses
   System.SysUtils,
   System.IOUtils,
-  WinApi.Windows,
   Daf.Extensions.Logging,
   Daf.Logging.Provider,
   Daf.Logging.Builder,
@@ -22,7 +21,6 @@ uses
 
 begin
   ReportMemoryLeaksOnShutdown := True;
-  SetConsoleOutputCP(CP_UTF8);
   try
     var Builder := TDafApplication.CreateHostBuilder;
     Builder.ConfigureAppConfiguration(procedure(Context: IHostBuilderContext; Builder: IConfigurationBuilder)

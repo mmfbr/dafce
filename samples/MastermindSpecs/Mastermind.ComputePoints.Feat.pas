@@ -1,4 +1,4 @@
-﻿  unit Mastermind.ComputePoints.Feat;
+  unit Mastermind.ComputePoints.Feat;
 
 interface
 
@@ -19,24 +19,24 @@ initialization
     Para poder mejorar mi próxima jugada
   ''')
 
-  .UseWorld<TGameWorld>
+  .UseWorld<TGameContext>
   .ScenarioOutline('Obtener puntuacion completa')
-    .Given('el código secreto es <Codigo>', procedure(W: TGameWorld)
+    .Given('el código secreto es <Codigo>', procedure(Ctx: TGameContext)
       begin
-        W.Game := TMastermind.Create(W.Codigo);
+        Ctx.Game := TMastermind.Create(Ctx.Codigo);
       end)
-    .When('realizo la jugada <Jugada>', procedure(W: TGameWorld)
+    .When('realizo la jugada <Jugada>', procedure(Ctx: TGameContext)
       begin
-        W.Game.Guess := W.Jugada;
+        Ctx.Game.Guess := Ctx.Jugada;
       end)
-    .&Then('El juego indica <correctos> correctos', procedure(W: TGameWorld)
+    .&Then('El juego indica <correctos> correctos', procedure(Ctx: TGameContext)
       begin
-        Expect(W.Game.Corrects).ToEqual(W.correctos);
-        Expect(W.Game.Misplaceds).ToEqual(W.desplazados);
+        Expect(Ctx.Game.Corrects).ToEqual(Ctx.correctos);
+        Expect(Ctx.Game.Misplaceds).ToEqual(Ctx.desplazados);
       end)
-    .&And('<desplazados> desplazados ', procedure(W: TGameWorld)
+    .&Then('y <desplazados> desplazados ', procedure(Ctx: TGameContext)
       begin
-        Expect(W.Game.Misplaceds).ToEqual(W.desplazados);
+        Expect(Ctx.Game.Misplaceds).ToEqual(Ctx.desplazados);
       end)
     .Examples([
       [   'Codigo',   'Jugada',  'Correctos', 'Desplazados'],

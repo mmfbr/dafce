@@ -1,4 +1,4 @@
-﻿unit Mastermind.DetectGameOver.Feat;
+unit Mastermind.DetectGameOver.Feat;
 
 interface
 uses
@@ -8,6 +8,7 @@ uses
   Mastermind.Game,
   Mastermind.SpecHelpers;
 
+  // Reorganizamos un poco el codigo para reusar el contexto entre features.
 implementation
 
 initialization
@@ -21,19 +22,19 @@ initialization
     @game-state
   ''')
 
-  .UseWorld<TGameWorld>
+  .UseWorld<TGameContext>
   .ScenarioOutline('Detectar partida terminda')
-    .Given('el código secreto es <Codigo>', procedure(W: TGameWorld)
+    .Given('el código secreto es <Codigo>', procedure(Ctx: TGameContext)
       begin
-        W.Game := TMastermind.Create(W.Codigo);
+        Ctx.Game := TMastermind.Create(Ctx.Codigo);
       end)
-    .When('realizo la jugada <Jugada>', procedure(W: TGameWorld)
+    .When('realizo la jugada <Jugada>', procedure(Ctx: TGameContext)
       begin
-        W.Game.Guess := W.Jugada;
+        Ctx.Game.Guess := Ctx.Jugada;
       end)
-    .&Then('el juego indica si ha terminado la partida', procedure(W: TGameWorld)
+    .&Then('el juego indica si ha terminado la partida', procedure(Ctx: TGameContext)
       begin
-        Expect(W.Game.GameOver).ToEqual(W.GameOver);
+        Expect(Ctx.Game.GameOver).ToEqual(Ctx.GameOver);
       end)
       .Examples([
       ['Codigo',     'Jugada',   'GameOver'],

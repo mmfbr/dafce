@@ -4,10 +4,10 @@
 
 uses
   Daf.MiniSpec,
-  Calculator.Add.Feat in 'Calculator.Add.Feat.pas',
+  Calculator.Add.Feature in 'Calculator.Add.Feature.pas',
   Calculator.Engine in 'Calculator.Engine.pas',
   Calculator.SpecHelpers in 'Calculator.SpecHelpers.pas',
-  Calculator.Mult.Feat in 'Calculator.Mult.Feat.pas';
+  Calculator.Mult.Feature in 'Calculator.Mult.Feature.pas';
 
 begin
   ReportMemoryLeaksOnShutdown := True;
