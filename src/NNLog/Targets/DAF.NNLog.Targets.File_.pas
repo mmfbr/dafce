@@ -233,7 +233,7 @@ begin
     on E: Exception do
     begin
       FileStream.Free;
-      raise Exception.CreateFmt('Unable to open log file "%s": %s', [FCurrentPath, E.Message]);
+      raise;
     end;
   end;
 end;
