@@ -12,11 +12,11 @@
         <Projects Include="Configuration.Abstractions\Daf.Configuration.Abstractions.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj">
-            <Dependencies>DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj</Dependencies>
-        </Projects>
         <Projects Include="Logging.Abstractions\Daf.Logging.Abstractions.dproj">
             <Dependencies/>
+        </Projects>
+        <Projects Include="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj">
+            <Dependencies>DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj;Configuration.Abstractions\Daf.Configuration.Abstractions.dproj</Dependencies>
         </Projects>
         <Projects Include="MediatR.Abstractions\Daf.MediatR.Abstractions.dproj">
             <Dependencies>DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj;Commons\Daf.Commons.dproj</Dependencies>
@@ -31,7 +31,7 @@
             <Dependencies>Hosting.Abstractions\Daf.Hosting.Abstractions.dproj;DependencyInjection\Daf.DependencyInjection.dproj;Configuration\Daf.Configuration.dproj</Dependencies>
         </Projects>
         <Projects Include="Logging\Daf.Logging.dproj">
-            <Dependencies/>
+            <Dependencies>DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj;Logging.Abstractions\Daf.Logging.Abstractions.dproj</Dependencies>
         </Projects>
         <Projects Include="NNLog\Daf.NNlog.dproj">
             <Dependencies/>
@@ -43,6 +43,12 @@
             <Dependencies>Hosting\Daf.Hosting.dproj</Dependencies>
         </Projects>
         <Projects Include="MiniSpec\Daf.MiniSpec.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DAL.Abstractions\Daf.DAL.Abstractions.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DAL\Daf.DAL.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -80,15 +86,6 @@
     <Target Name="Daf_Configuration_Abstractions:Make">
         <MSBuild Projects="Configuration.Abstractions\Daf.Configuration.Abstractions.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Daf_Hosting_Abstractions" DependsOnTargets="Daf.DependencyInjection.Abstractions">
-        <MSBuild Projects="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj"/>
-    </Target>
-    <Target Name="Daf_Hosting_Abstractions:Clean" DependsOnTargets="Daf.DependencyInjection.Abstractions:Clean">
-        <MSBuild Projects="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Daf_Hosting_Abstractions:Make" DependsOnTargets="Daf.DependencyInjection.Abstractions:Make">
-        <MSBuild Projects="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Daf_Logging_Abstractions">
         <MSBuild Projects="Logging.Abstractions\Daf.Logging.Abstractions.dproj"/>
     </Target>
@@ -97,6 +94,15 @@
     </Target>
     <Target Name="Daf_Logging_Abstractions:Make">
         <MSBuild Projects="Logging.Abstractions\Daf.Logging.Abstractions.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Daf_Hosting_Abstractions" DependsOnTargets="Daf.DependencyInjection.Abstractions;Daf.Configuration.Abstractions">
+        <MSBuild Projects="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj"/>
+    </Target>
+    <Target Name="Daf_Hosting_Abstractions:Clean" DependsOnTargets="Daf.DependencyInjection.Abstractions:Clean;Daf.Configuration.Abstractions:Clean">
+        <MSBuild Projects="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Daf_Hosting_Abstractions:Make" DependsOnTargets="Daf.DependencyInjection.Abstractions:Make;Daf.Configuration.Abstractions:Make">
+        <MSBuild Projects="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj" Targets="Make"/>
     </Target>
     <Target Name="Daf_MediatR_Abstractions" DependsOnTargets="Daf.DependencyInjection.Abstractions;Daf.Commons">
         <MSBuild Projects="MediatR.Abstractions\Daf.MediatR.Abstractions.dproj"/>
@@ -134,13 +140,13 @@
     <Target Name="Daf_Hosting:Make" DependsOnTargets="Daf.Hosting.Abstractions:Make;Daf.DependencyInjection:Make;Daf.Configuration:Make">
         <MSBuild Projects="Hosting\Daf.Hosting.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Daf_Logging">
+    <Target Name="Daf_Logging" DependsOnTargets="Daf.DependencyInjection.Abstractions;Daf.Logging.Abstractions">
         <MSBuild Projects="Logging\Daf.Logging.dproj"/>
     </Target>
-    <Target Name="Daf_Logging:Clean">
+    <Target Name="Daf_Logging:Clean" DependsOnTargets="Daf.DependencyInjection.Abstractions:Clean;Daf.Logging.Abstractions:Clean">
         <MSBuild Projects="Logging\Daf.Logging.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Daf_Logging:Make">
+    <Target Name="Daf_Logging:Make" DependsOnTargets="Daf.DependencyInjection.Abstractions:Make;Daf.Logging.Abstractions:Make">
         <MSBuild Projects="Logging\Daf.Logging.dproj" Targets="Make"/>
     </Target>
     <Target Name="Daf_NNlog">
@@ -179,14 +185,32 @@
     <Target Name="Daf_MiniSpec:Make">
         <MSBuild Projects="MiniSpec\Daf.MiniSpec.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Daf_DAL_Abstractions">
+        <MSBuild Projects="DAL.Abstractions\Daf.DAL.Abstractions.dproj"/>
+    </Target>
+    <Target Name="Daf_DAL_Abstractions:Clean">
+        <MSBuild Projects="DAL.Abstractions\Daf.DAL.Abstractions.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Daf_DAL_Abstractions:Make">
+        <MSBuild Projects="DAL.Abstractions\Daf.DAL.Abstractions.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Daf_DAL">
+        <MSBuild Projects="DAL\Daf.DAL.dproj"/>
+    </Target>
+    <Target Name="Daf_DAL:Clean">
+        <MSBuild Projects="DAL\Daf.DAL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Daf_DAL:Make">
+        <MSBuild Projects="DAL\Daf.DAL.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Daf_Commons;Daf_DependencyInjection_Abstractions;Daf_Configuration_Abstractions;Daf_Hosting_Abstractions;Daf_Logging_Abstractions;Daf_MediatR_Abstractions;Daf_DependencyInjection;Daf_Configuration;Daf_Hosting;Daf_Logging;Daf_NNlog;Daf_MediatR;Daf_Application;Daf_MiniSpec"/>
+        <CallTarget Targets="Daf_Commons;Daf_DependencyInjection_Abstractions;Daf_Configuration_Abstractions;Daf_Logging_Abstractions;Daf_Hosting_Abstractions;Daf_MediatR_Abstractions;Daf_DependencyInjection;Daf_Configuration;Daf_Hosting;Daf_Logging;Daf_NNlog;Daf_MediatR;Daf_Application;Daf_MiniSpec;Daf_DAL_Abstractions;Daf_DAL"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Daf_Commons:Clean;Daf_DependencyInjection_Abstractions:Clean;Daf_Configuration_Abstractions:Clean;Daf_Hosting_Abstractions:Clean;Daf_Logging_Abstractions:Clean;Daf_MediatR_Abstractions:Clean;Daf_DependencyInjection:Clean;Daf_Configuration:Clean;Daf_Hosting:Clean;Daf_Logging:Clean;Daf_NNlog:Clean;Daf_MediatR:Clean;Daf_Application:Clean;Daf_MiniSpec:Clean"/>
+        <CallTarget Targets="Daf_Commons:Clean;Daf_DependencyInjection_Abstractions:Clean;Daf_Configuration_Abstractions:Clean;Daf_Logging_Abstractions:Clean;Daf_Hosting_Abstractions:Clean;Daf_MediatR_Abstractions:Clean;Daf_DependencyInjection:Clean;Daf_Configuration:Clean;Daf_Hosting:Clean;Daf_Logging:Clean;Daf_NNlog:Clean;Daf_MediatR:Clean;Daf_Application:Clean;Daf_MiniSpec:Clean;Daf_DAL_Abstractions:Clean;Daf_DAL:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Daf_Commons:Make;Daf_DependencyInjection_Abstractions:Make;Daf_Configuration_Abstractions:Make;Daf_Hosting_Abstractions:Make;Daf_Logging_Abstractions:Make;Daf_MediatR_Abstractions:Make;Daf_DependencyInjection:Make;Daf_Configuration:Make;Daf_Hosting:Make;Daf_Logging:Make;Daf_NNlog:Make;Daf_MediatR:Make;Daf_Application:Make;Daf_MiniSpec:Make"/>
+        <CallTarget Targets="Daf_Commons:Make;Daf_DependencyInjection_Abstractions:Make;Daf_Configuration_Abstractions:Make;Daf_Logging_Abstractions:Make;Daf_Hosting_Abstractions:Make;Daf_MediatR_Abstractions:Make;Daf_DependencyInjection:Make;Daf_Configuration:Make;Daf_Hosting:Make;Daf_Logging:Make;Daf_NNlog:Make;Daf_MediatR:Make;Daf_Application:Make;Daf_MiniSpec:Make;Daf_DAL_Abstractions:Make;Daf_DAL:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Debug'">
@@ -214,6 +238,12 @@
             <Platforms/>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="DAL.Abstractions\Daf.DAL.Abstractions.dproj">
+            <ProjectGuid>{CB9EF10C-5A35-4435-8E3D-B17BBA7B5268}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Logging\Daf.Logging.dproj">
             <ProjectGuid>{19866620-D4CF-45AB-BE8C-2B130A45649D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -222,12 +252,18 @@
         </BuildGroupProject>
         <BuildGroupProject Include="DependencyInjection\Daf.DependencyInjection.dproj">
             <ProjectGuid>{CE3C134C-D662-4027-9B11-DABF1675C613}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
+            <Configurations/>
+            <Platforms/>
             <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="DependencyInjection.Abstractions\Daf.DependencyInjection.Abstractions.dproj">
             <ProjectGuid>{8E0F52D4-F287-4899-B3BE-57A0D38C2AC7}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="MiniSpec\Daf.MiniSpec.dproj">
+            <ProjectGuid>{8DAF6EA6-3645-43A2-B501-1C87F2A81FE9}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -237,12 +273,6 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="MiniSpec\Daf.MiniSpec.dproj">
-            <ProjectGuid>{8DAF6EA6-3645-43A2-B501-1C87F2A81FE9}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Hosting.Abstractions\Daf.Hosting.Abstractions.dproj">
             <ProjectGuid>{7AE0E470-84D4-438F-8293-DB38BC5AF1B0}</ProjectGuid>
@@ -264,6 +294,12 @@
         </BuildGroupProject>
         <BuildGroupProject Include="MediatR.Abstractions\Daf.MediatR.Abstractions.dproj">
             <ProjectGuid>{1736E07A-1665-40C1-989B-D874FA141F24}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="DAL\Daf.DAL.dproj">
+            <ProjectGuid>{BB5F9451-02FA-4767-BC05-19A31543A838}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
