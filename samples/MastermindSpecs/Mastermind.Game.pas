@@ -1,4 +1,4 @@
-﻿unit Mastermind.Game;
+unit Mastermind.Game;
 
 interface
 
