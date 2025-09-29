@@ -71,7 +71,10 @@ begin
   TValue.Make(nil, PInfo, Result);
   if PInfo.Kind = tkEnumeration then
   begin
-    TValue.Make(GetEnumValue(PInfo, Src), PInfo, Result);
+    var EnumValue := GetEnumValue(PInfo, Src);
+    if EnumValue = -1 then //not found, use default
+      EnumValue := 0;
+    TValue.Make(EnumValue, PInfo, Result);
     Exit;
   end;
 
