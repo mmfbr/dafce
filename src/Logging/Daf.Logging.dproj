@@ -100,6 +100,7 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="Daf.DependencyInjection.Abstractions.dcp"/>
         <DCCReference Include="Daf.Logging.Abstractions.dcp"/>
+        <DCCReference Include="Daf.Commons.dcp"/>
         <DCCReference Include="DAF.Logging.Builder.pas"/>
         <DCCReference Include="DAF.Logging.Provider.pas"/>
         <DCCReference Include="Daf.Logging.pas"/>
@@ -148,6 +149,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\..\out\bin\Daf.Logging.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>Daf.Logging.bpl</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\out\bin\Daf.Logging.bpl" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Daf.Logging.bpl</RemoteName>
                         <Overwrite>true</Overwrite>

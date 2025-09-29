@@ -98,6 +98,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="Daf.Commons.dcp"/>
         <DCCReference Include="DAF.Extensions.Logging.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -144,6 +145,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\..\out\bin\Daf.Logging.Abstractions.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>Daf.Logging.Abstractions.bpl</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\out\bin\Daf.Logging.Abstractions.bpl" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Daf.Logging.Abstractions.bpl</RemoteName>
                         <Overwrite>true</Overwrite>

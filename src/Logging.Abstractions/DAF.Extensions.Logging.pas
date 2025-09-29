@@ -203,6 +203,11 @@ type
     function CreateLogger(const AType: PTypeInfo): ILogger; overload;
   end;
 
+  ILoggerProvider = interface(IInvokable)
+    ['{672E4EF7-7C9D-4E8C-BCA3-AB08B2E67D8F}']
+    function CreateLogger(const Category: string): ILogger;
+  end;
+
   TNullLoggerFactory = class(TInterfacedObject, ILoggerFactory)
   public
     function CreateLogger(const Category: string): ILogger; overload;
@@ -252,12 +257,54 @@ type
     procedure LogCritical(const Msg: string; const Args: TArray<TValue> = nil); overload;
     procedure LogCritical(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
     procedure LogCritical(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
-    procedure LogCritical(const EventId: TEventId; const Ex: Exception; const Msg: string;
-      const Args: TArray<TValue> = nil); overload;
+    procedure LogCritical(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
   end;
 
+var
+  DAFInternalLogger: ILogger;
 implementation
+uses
+  Daf.Types;
 
+type
+  // Internal DAF logger
+  TDAFInternalLogger = class(TInterfacedObject, ILogger)
+  private
+    FCategory: string;
+  public
+    constructor Create(const Category: string);
+    function BeginScope(const Msg: string; const Args: TArray<TValue>; const ScopedProc: TProc = nil): ILogScopeVoid; overload;
+    function BeginScope(const Msg: string; const ScopedProc: TProc = nil): ILogScopeVoid; overload;
+    procedure Log(const Entry: TLogEntry); overload;
+    procedure Log(const Level: TLogLevel; const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure Log(const Level: TLogLevel; const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure Log(const Level: TLogLevel; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure Log(const Level: TLogLevel; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogDebug(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogDebug(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogDebug(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogDebug(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogTrace(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogTrace(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogTrace(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogTrace(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogInformation(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogInformation(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogInformation(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogInformation(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogWarning(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogWarning(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogWarning(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogWarning(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogError(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogError(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogError(const Ex: Exception; const Msg: string = ''; const Args: TArray<TValue> = nil); overload;
+    procedure LogError(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogCritical(const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogCritical(const EventId: TEventId; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogCritical(const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+    procedure LogCritical(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue> = nil); overload;
+  end;
 
 { TLogLevelHelper }
 
@@ -378,7 +425,6 @@ begin
     end;
   Result := False;
 end;
-
 
 { TLogEntry }
 
@@ -593,4 +639,177 @@ begin
 
 end;
 
+{ TDAFInternalLogger }
+
+constructor TDAFInternalLogger.Create(const Category: string);
+begin
+  inherited Create;
+  FCategory := Category;
+end;
+
+function TDAFInternalLogger.BeginScope(const Msg: string; const Args: TArray<TValue>; const ScopedProc: TProc = nil): ILogScopeVoid;
+begin
+  Result := nil;
+  if Assigned(ScopedProc) then ScopedProc;
+end;
+
+function TDAFInternalLogger.BeginScope(const Msg: string; const ScopedProc: TProc = nil): ILogScopeVoid;
+begin
+  Result := BeginScope(Msg, nil, ScopedProc);
+end;
+
+procedure TDAFInternalLogger.Log(const Entry: TLogEntry);
+begin
+  if (Entry.Level in [TLogLevel.Warning, TLogLevel.Error, TLogLevel.Critical]) and
+     (Entry.Category.StartsWith('DAF')) then
+  begin
+    // simulate layout '${timestamp} #${pid}:${thread} [${level}] ${category} | ${message} ${exception}';
+    var
+      Timestamp := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now);
+    var
+      ProcessId := Debugger.CurrentProcessId;
+    var
+      ThreadId := Debugger.CurrentThreadId;
+    var
+      LevelStr := Entry.Level.ToString;
+    var
+      Category := Entry.Category;
+    var
+      Message := Entry.Message;
+    var
+      ExceptionStr: string;
+    if Assigned(Entry.Exception) then
+      ExceptionStr := Format(' Exception: %s', [Entry.Exception.Message])
+    else
+      ExceptionStr := '';
+    Debugger.Write('%s #%d:%d [%s] %s | %s%s', [Timestamp, ProcessId, ThreadId, LevelStr, Category, Message, ExceptionStr]);
+  end;
+end;
+
+procedure TDAFInternalLogger.Log(const Level: TLogLevel; const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  var Entry: TLogEntry;
+  Entry.Level := Level;
+  Entry.Category := FCategory;
+  Entry.EventId := EventId;
+  Entry.Exception := Ex;
+  Entry.State := TLogState.Create(Msg, Args);
+  Entry.Formatter := Entry.State.Formatter;
+  Log(Entry);
+end;
+
+procedure TDAFInternalLogger.Log(const Level: TLogLevel; const EventId: TEventId; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(Level, EventId, nil, Msg, Args);
+end;
+
+procedure TDAFInternalLogger.Log(const Level: TLogLevel; const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(Level, 0, Ex, Msg, Args);
+end;
+
+procedure TDAFInternalLogger.Log(const Level: TLogLevel; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(Level, 0, nil, Msg, Args);
+end;
+
+procedure TDAFInternalLogger.LogDebug(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Debug, EventId, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogDebug(const EventId: TEventId; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Debug, EventId, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogDebug(const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Debug, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogDebug(const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Debug, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogTrace(const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Trace, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogTrace(const EventId: TEventId; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Trace, EventId, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogTrace(const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Trace, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogTrace(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Trace, EventId, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogInformation(const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Information, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogInformation(const EventId: TEventId; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Information, EventId, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogInformation(const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Information, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogInformation(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Information, EventId, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogWarning(const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Warning, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogWarning(const EventId: TEventId; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Warning, EventId, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogWarning(const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Warning, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogWarning(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Warning, EventId, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogError(const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Error, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogError(const EventId: TEventId; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Error, EventId, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogError(const Ex: Exception; const Msg: string = ''; const Args: TArray<TValue> = nil);
+begin
+  Log(TLogLevel.Error, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogError(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Error, EventId, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogCritical(const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Critical, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogCritical(const EventId: TEventId; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Critical, EventId, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogCritical(const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Critical, Ex, Msg, Args);
+end;
+procedure TDAFInternalLogger.LogCritical(const EventId: TEventId; const Ex: Exception; const Msg: string; const Args: TArray<TValue>);
+begin
+  Log(TLogLevel.Critical, EventId, Ex, Msg, Args);
+end;
+
+initialization
+  DAFInternalLogger := TDAFInternalLogger.Create('DAF');
 end.

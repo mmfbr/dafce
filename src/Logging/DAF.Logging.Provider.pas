@@ -1,4 +1,4 @@
-unit DAF.Logging.Provider;
+﻿unit DAF.Logging.Provider;
 
 interface
 
@@ -6,15 +6,11 @@ uses
   System.SysUtils,
   System.Generics.Collections,
   System.TypInfo,
+  System.Rtti,
   Daf.Extensions.Logging,
   Daf.Logging;
 
 type
-  ILoggerProvider = interface(IInvokable)
-    ['{672E4EF7-7C9D-4E8C-BCA3-AB08B2E67D8F}']
-    function CreateLogger(const Category: string): ILogger;
-  end;
-
   TCompositeLogger = class(TLogger)
   private
     FLoggers: TArray<ILogger>;
@@ -59,8 +55,13 @@ procedure TCompositeLogger.Log(const Entry: TLogEntry);
 begin
   TMonitor.Enter(FLock);
   try
-    for var Logger in FLoggers do
-      Logger.Log(Entry);
+    try
+      for var Logger in FLoggers do
+        Logger.Log(Entry);
+    except
+      on E: EXception do
+        DafInternalLogger.LogError(E, '%s', [ClassName]);
+    end;
   finally
     TMonitor.Exit(FLock);
   end;
