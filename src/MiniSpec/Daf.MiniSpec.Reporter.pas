@@ -376,8 +376,6 @@ begin
     sikGiven: Result := 'Given';
     sikWhen: Result := 'When';
     sikThen: Result := 'Then';
-    sikAnd: Result := 'And';
-    sikBut: Result := 'But';
     else
       Result := '';
   end;
@@ -391,7 +389,7 @@ begin
     sikExampleInit: Result := 2;
     sikGiven: Result := 2;
     sikWhen: Result := 2;
-    sikThen, sikAnd, sikBut: Result := 2;
+    sikThen: Result := 2;
     else
       Result := 0;
   end;
@@ -553,7 +551,7 @@ begin
     sikExampleInit: ;
     sikGiven,
     sikWhen,
-    sikThen,sikAnd,sikBut: Step(S, S.RunInfo.Result = srrSuccess, S.RunInfo.ExecTimeMs, S.RunInfo.ErrMsg);
+    sikThen: Step(S, S.RunInfo.Result = srrSuccess, S.RunInfo.ExecTimeMs, S.RunInfo.ErrMsg);
   end;
 end;
 

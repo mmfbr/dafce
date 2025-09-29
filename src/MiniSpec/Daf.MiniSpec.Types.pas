@@ -9,7 +9,7 @@ uses
 type
   TStepProc<T> = reference to procedure(World: T);
   TExamplesTable = TArray<TArray<TValue>>;
-  TSpecItemKind = (sikFeature, sikBackground, sikScenario, sikExample, sikExampleInit, sikGiven, sikWhen, sikThen, sikAnd, sikBut);
+  TSpecItemKind = (sikFeature, sikBackground, sikScenario, sikExample, sikExampleInit, sikGiven, sikWhen, sikThen);
   TSpecRunState =  (srsPrepared, srsSkiped, srsRunning, srsFinished);
   TSpecRunResult =  (srrNone, srrSuccess, srrFail, srrError);
   TSpecTags = record
@@ -51,8 +51,6 @@ type
     function Given(const Desc: string; Step: TStepProc<T>): IScenarioBuilder<T>;
     function When(const Desc: string; Step: TStepProc<T>) : IScenarioBuilder<T>;
     function &Then(const Desc: string; Step: TStepProc<T>) : IScenarioBuilder<T>;
-    function &And(const Desc: string; Step: TStepProc<T>) : IScenarioBuilder<T>;
-    function But(const Desc: string; Step: TStepProc<T>) : IScenarioBuilder<T>;
 
     function Scenario(const Description: string): IScenarioBuilder<T>;overload;
     function ScenarioOutline(const Description: string): IScenarioOutlineBuilder<T>;
@@ -62,8 +60,6 @@ type
     function Given(const Desc: string; Step: TStepProc<T> = nil) : IScenarioOutlineBuilder<T>;
     function When(const Desc: string; Step: TStepProc<T>): IScenarioOutlineBuilder<T>;
     function &Then(const Desc: string; Step: TStepProc<T>): IScenarioOutlineBuilder<T>;
-    function &And(const Desc: string; Step: TStepProc<T>) : IScenarioOutlineBuilder<T>;
-    function But(const Desc: string; Step: TStepProc<T>) : IScenarioOutlineBuilder<T>;
     function Examples(const Table: TExamplesTable): IFeatureBuilder<T>;
   end;
 
@@ -131,10 +127,8 @@ type
     destructor Destroy;override;
     procedure Run(World: TObject);virtual;
     property Parent: ISpecItem read FParent;
-    property Tags: TSpecTags read GetTags;
-    property Kind: TSpecItemKind read GetKind;
     property Description: string read GetDescription;
-    property RunInfo: TSpecRunInfo read GetRunInfo;
+    property Tags: TSpecTags read GetTags;
   end;
 
   TScenarioStep<T: class> = class(TSpecItem, IScenarioStep)
@@ -182,8 +176,6 @@ type
     function Given(const Desc: string; Step: TStepProc<T>): TScenario<T>;
     function When(const Desc: string; Step: TStepProc<T>) : TScenario<T>;
     function &Then(const Desc: string; Step: TStepProc<T>) : TScenario<T>;
-    function &And(const Desc: string; Step: TStepProc<T>) : TScenario<T>;
-    function But(const Desc: string; Step: TStepProc<T>) : TScenario<T>;
     procedure Run(World: TObject);override;
     property Feature: IFeature read GetFeature;
   end;
@@ -557,18 +549,6 @@ function TScenario<T>.&Then(const Desc: string; Step: TStepProc<T>): TScenario<T
 begin
   Result := Self;
   FStepsThen.Add(TScenarioStep<T>.Create(sikThen, Self, Desc, Step));
-end;
-
-function TScenario<T>.&And(const Desc: string; Step: TStepProc<T>): TScenario<T>;
-begin
-  Result := Self;
-  FStepsThen.Add(TScenarioStep<T>.Create(sikAnd, Self, Desc, Step));
-end;
-
-function TScenario<T>.But(const Desc: string; Step: TStepProc<T>): TScenario<T>;
-begin
-  Result := Self;
-  FStepsThen.Add(TScenarioStep<T>.Create(sikBut, Self, Desc, Step));
 end;
 
 { TFeature<T>}

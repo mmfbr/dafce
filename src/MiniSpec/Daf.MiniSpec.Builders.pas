@@ -46,8 +46,6 @@ type
     function Given(const Desc: string; Step: TStepProc<T>): IScenarioBuilder<T>;
     function When(const Desc: string; Step: TStepProc<T>) : IScenarioBuilder<T>;
     function &Then(const Desc: string; Step: TStepProc<T>) : IScenarioBuilder<T>;
-    function &And(const Desc: string; Step: TStepProc<T>) : IScenarioBuilder<T>;
-    function But(const Desc: string; Step: TStepProc<T>) : IScenarioBuilder<T>;
 
     function Scenario(const Description: string): IScenarioBuilder<T>;overload;
     function ScenarioOutline(const Description: string): IScenarioOutlineBuilder<T>;
@@ -67,8 +65,6 @@ type
     function Given(const Desc: string; Step: TStepProc<T> = nil) : IScenarioOutlineBuilder<T>;
     function When(const Desc: string; Step: TStepProc<T>): IScenarioOutlineBuilder<T>;
     function &Then(const Desc: string; Step: TStepProc<T>): IScenarioOutlineBuilder<T>;
-    function &And(const Desc: string; Step: TStepProc<T>) : IScenarioOutlineBuilder<T>;
-    function But(const Desc: string; Step: TStepProc<T>) : IScenarioOutlineBuilder<T>;
     function Examples(const Table: TExamplesTable): IFeatureBuilder<T>;
   end;
 
@@ -173,18 +169,6 @@ begin
   Result := Self;
 end;
 
-function TScenarioBuilder<T>.&And(const Desc: string; Step: TStepProc<T>): IScenarioBuilder<T>;
-begin
-  FScenario.&And(Desc, Step);
-  Result := Self;
-end;
-
-function TScenarioBuilder<T>.But(const Desc: string; Step: TStepProc<T>): IScenarioBuilder<T>;
-begin
-  FScenario.But(Desc, Step);
-  Result := Self;
-end;
-
 function TScenarioBuilder<T>.Scenario(const Description: string): IScenarioBuilder<T>;
 begin
   Result := TScenarioBuilder<T>.Create(FScenario.Feature as TFeature<T>, Description);
@@ -232,18 +216,6 @@ begin
   Result := Self;
 end;
 
-function TScenarioOutlineBuilder<T>.&And(const Desc: string; Step: TStepProc<T>): IScenarioOutlineBuilder<T>;
-begin
-  FStepsThen.Add(TScenarioStep<T>.Create(sikAnd, nil, Desc, Step));
-  Result := Self;
-end;
-
-function TScenarioOutlineBuilder<T>.But(const Desc: string; Step: TStepProc<T>): IScenarioOutlineBuilder<T>;
-begin
-  FStepsThen.Add(TScenarioStep<T>.Create(sikBut, nil, Desc, Step));
-  Result := Self;
-end;
-
 function TScenarioOutlineBuilder<T>.BuildInitStep(Headers, Row: TArray<TValue>) : TStepProc<T>;
 begin
   var RttiCtx: TRttiContext;
@@ -283,11 +255,7 @@ begin
       ScnBuilder.When(Step.Description, Step.Proc);
 
     for var Step in FStepsThen do
-      case Step.Kind of
-        sikThen: ScnBuilder.&Then(Step.Description, Step.Proc);
-        sikAnd: ScnBuilder.&And(Step.Description, Step.Proc);
-        sikBut: ScnBuilder.But(Step.Description, Step.Proc);
-      end;
+      ScnBuilder.&Then(Step.Description, Step.Proc);
   end;
   Result := TFeatureBuilder<T>.Create(FFeature);
 end;
