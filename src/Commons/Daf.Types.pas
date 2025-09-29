@@ -75,6 +75,7 @@ type
     class procedure Write(const FmtStr:string; Args: array of const); overload; static;
     class function Enabled: Boolean; static;
     class function CurrentProcessId: Cardinal; static;
+    class function CurrentThreadId: Cardinal; static;
   end;
 
   &If = class
@@ -269,6 +270,11 @@ begin
 {$ELSE}
   Result := 0;
 {$ENDIF MSWINDOWS}
+end;
+
+class function Debugger.CurrentThreadId: Cardinal;
+begin
+  Result := TThread.Current.ThreadID;
 end;
 
 class function Debugger.Enabled: Boolean;

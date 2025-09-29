@@ -98,6 +98,7 @@ type
     function Run(const Runnable: IRunnable): TProc;
     procedure Add(const Task: ITask);overload;
   public
+    class operator Finalize(var Dest: TRunQueue);
     constructor Create(const MaxSize: Integer);
     procedure Add(const Runnable: IRunnable);overload;
     procedure Start;
@@ -467,6 +468,12 @@ begin
 end;
 
 { TRunQueue }
+
+class operator TRunQueue.Finalize(var Dest: TRunQueue);
+begin
+  Dest.FTasks := nil;
+  Dest.FTThreadPool.Free;
+end;
 
 constructor TRunQueue.Create(const MaxSize: Integer);
 begin
