@@ -147,7 +147,7 @@ uses
   System.IOUtils,
   System.SyncObjs,
   System.Types,
-  Daf.Types,
+  Daf.Extensions.Logging,
   Daf.DependencyInjection,
   Daf.Configuration.Builder,
   Daf.Configuration.Chained,
@@ -290,11 +290,19 @@ end;
 
 procedure THost.Start;
 begin
-  for var HostedService in FHostedServices do
-    HostedService.Start;
-  var Lifetime := GetServices.GetRequiredService<IHostApplicationLifetime>;
-  if Assigned(Lifetime) then
-    (Lifetime as THostApplicationLifetime).NotifyStarted;
+  try
+    for var HostedService in FHostedServices do
+      HostedService.Start;
+    var Lifetime := GetServices.GetRequiredService<IHostApplicationLifetime>;
+    if Assigned(Lifetime) then
+      (Lifetime as THostApplicationLifetime).NotifyStarted;
+  except
+    on E: Exception do
+    begin
+      DafInternalLogger.LogError(E, '%s', [ClassName]);
+      raise;
+    end;
+  end;
 end;
 
 procedure THost.Stop;
@@ -517,10 +525,10 @@ end;
 
 function THostBuilder.Build: IHost;
 begin
-  if (FHostBuilt) then
-    raise Exception.Create('IHostBuilder.Build already called');
-  FHostBuilt := True;
   try
+    if (FHostBuilt) then
+      raise Exception.Create('IHostBuilder.Build already called');
+    FHostBuilt := True;
     try
       InitializeHostConfiguration;
       InitializeHostingEnvironment;
@@ -550,7 +558,7 @@ begin
   except
     on E: Exception do
     begin
-      Debugger.Write('%s [ERROR] %s | %s', [ParamStr(0), ClassName, E.Message]);
+      DafInternalLogger.LogError(E, '%s', [ClassName]);
       raise;
     end;
   end;
